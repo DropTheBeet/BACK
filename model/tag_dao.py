@@ -1,12 +1,13 @@
 from sqlalchemy import text
+from model.VO import Tag
 
 class TagDAO:
     def __init__(self, database):
-        self.db = database
+        self.db = database;
 
     def get_tag_list_by_id(self, user_no):
         user_tags = self.db.execute(text("""
-
+        
 
         """), {
             'user_no': user_no

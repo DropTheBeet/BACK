@@ -31,10 +31,12 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
+    app.app_context().push()
+
     ## Persistenace Layer
-    user_dao = UserDAO()
-    tag_dao = TagDAO()
-    image_dao = ImageDAO()
+    user_dao = UserDAO(db)
+    tag_dao = TagDAO(db)
+    image_dao = ImageDAO(db)
 
     ## Business Layer
     s3_client = boto3.client(

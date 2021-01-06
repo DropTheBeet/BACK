@@ -1,33 +1,31 @@
 from sqlalchemy import text
+from model.VO import User
 
 class UserDAO:
     def __init__(self, database):
-        self.db = database
+        self.db = database;
 
-    def insert_user(self, user):
-        return self.db.execute(text("""
-            INSERT INTO user (
-                user_id,
-                user_pw
-            ) VALUES (
-                :name,
-                :password
-            )
-        """), user).lastrowid
+    def insert_user(self, user):                # 입력값 : { "user_id" : "example_id", "user_pw" : "hashed_pw" }
+        _user = User(user['user_id'], user['user_pw'])
+        try:
+            self.db.session.add(_user)
+            self.db.session.commit()
+        except:
+            print("INSERT_USER 실패 :", user)
+            return False
+
+        return True
 
     def get_user_no_and_password(self, user_id):
-        row = self.db.execute(text("""    
-            SELECT
-                user_no,
-                user_pw
-            FROM user
-            WHERE user_id = :id
-        """), {'id' : user_id}).fetchone()
+        _user = User.query.filter_by(user_id=user_id)
+
+        if _user is None:
+            return None
 
         return {
-            'user_no'         : row['user_no'],
-            'hashed_password' : row['user_pw']
-        } if row else None
+            'user_no'         : _user.user_no,
+            'hashed_password' : _user.user_pw
+        }
 
 
 
