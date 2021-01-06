@@ -2,10 +2,10 @@ import config
 import boto3
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 
-from model import UserDAO, TagDAO, ImageDAO, db
+from model import UserDAO, TagDAO, ImageDAO
+from model.models import db
 from service import UserService, ImageService, TagService
 from view import create_endpoints
 
@@ -27,7 +27,8 @@ def create_app(test_config=None):
     else:
         app.config.update(test_config)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = config['DB_URL']
+    app.config['SQLALCHEMY_DATABASE_URI'] = config.DB_URL
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
 

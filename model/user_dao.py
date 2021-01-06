@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from model.VO import User
+from model.models import User
 
 class UserDAO:
     def __init__(self, database):
@@ -23,8 +23,8 @@ class UserDAO:
             return None
 
         return {
-            'user_no'         : _user.user_no,
-            'hashed_password' : _user.user_pw
+            'user_no'         : _user[0].user_no,
+            'hashed_password' : _user[0].user_pw
         }
 
 
