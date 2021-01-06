@@ -1,6 +1,6 @@
 from sqlalchemy import text
-from model.VO import Image
-from util import query2list
+from model.models import Image
+from model.util import query2list
 
 class ImageDAO:
     def __init__(self, database):
