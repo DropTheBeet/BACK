@@ -59,10 +59,13 @@ class ImageService:
 
         return self.image_dao.upload_image(thum_url, img_url, user_no, filename)
 
+
+
     def delete_image(self, img_no):
         # sql에서 img_no로  파일명을 받아옴,
         self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='파일명')
         self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='thum_' + '파일명')
+
         # 성공 했을시
         # sql에서 파일 번호 지움
         return self.image_dao.delete_image(img_no)
