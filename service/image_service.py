@@ -16,6 +16,12 @@ class ImageService:
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_dtail(img_no, user_no)
 
+    def put_tags_on_image_by_tensor(self, upload_image, img_no):
+        # 텐서 서버 이미지 전송
+        # 서버에서  태그랑, 이미지 디텍션 정보 받기
+        # 받은 정보 sql에 저장
+        pass
+
     def get_recommended_image_by_tensor(self, recommended_tags_rating, user_no):
         ## 추천시스템 알고리즘 활용 tag, rating 딕셔너리 값 매개변수에 삽입
         ## 태그와, 이미지에 관한 데이터를 텐서서버에 넘김
