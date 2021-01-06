@@ -6,10 +6,9 @@ from datetime import datetime, timedelta
 
 
 class UserService:
-    def __init__(self, user_dao, config, s3_client):
+    def __init__(self, user_dao, config):
         self.user_dao = user_dao
         self.config = config
-        self.s3 = s3_client
 
     def create_new_user(self, new_user):
         new_user['password'] = bcrypt.hashpw(

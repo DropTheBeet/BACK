@@ -44,9 +44,9 @@ def create_app(test_config=None):
     )
 
     services = Services
-    services.user_service = UserService(user_dao, config)
+    services.user_service = UserService(user_dao, app.config)
     services.tag_service = TagService(tag_dao)
-    services.image_service = ImageService(image_dao)
+    services.image_service = ImageService(image_dao, app.config, s3_client)
 
 
     ## 엔드포인트들을 생성

@@ -1,7 +1,11 @@
+from PIL import Image
+
 
 class ImageService:
-    def __init__(self, image_dao):
+    def __init__(self, image_dao, config, s3_client):
         self.image_dao = image_dao
+        self.config    = config
+        self.s3        = s3_client
 
     def get_image_list_by_id(self, user_no):
         return self.image_dao.get_image_list_by_id(user_no)
@@ -36,11 +40,11 @@ class ImageService:
         return self.image_dao.delte_like(img_no, user_no)
 
     def upload_image(self, upload_image, filename, user_no):
-        ### 이미지 썸네일 처리하는 프로세스 추가하여야함
-        thum_img = upload_image
-        thumfilename = filename+"_thum"
+        thum_image = Image.open(upload_image)
+        thum_image.thumbnail((190, 190))
+        thumfilename = "_thum" + filename
         self.s3.upload_fileobj(
-            thum_img,
+            thum_image,
             self.config['S3_BUCKET'],
             thumfilename
         )
@@ -55,8 +59,14 @@ class ImageService:
 
         return self.image_dao.upload_image(thum_url, img_url, user_no, filename)
 
+
+
     def delete_image(self, img_no):
-        ## s3에서 thum_img, upload_img 제거하는 프로세스 구현
+        # sql에서 img_no로  파일명을 받아옴,
+        self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='파일명')
+        self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='thum_' + '파일명')
+        #성공 했을시
+        # sql에서 파일 번호 지움
         return self.image_dao.delete_image(img_no)
 
 
