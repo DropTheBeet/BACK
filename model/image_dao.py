@@ -1,22 +1,20 @@
 from sqlalchemy import text
+from model.VO import Image
+from util import query2list
 
 class ImageDAO:
     def __init__(self, database):
         self.db = database
 
-    def get_image_list_by_id(self, user_no):
-        user_images = self.db.execute(text("""
-        
-        
-        """), {
-            'user_no' : user_no
-        }).fetchall()
+    def get_image_list_by_user(self, user_no):
+        _images = Image.query.filter_by(user_no=user_no).all()
 
-        return [{
-            'img_no' : user_image['img_no'],
-            'thum_url' : user_image['thum_url'],
-            'reg_date' : user_image['reg_date'] ,
-        } for user_image in user_images]
+        if _images is None:
+            return None
+
+        result = query2list(_images, ['img_no', 'thum_url', 'reg_date'])
+
+        return result
 
     def get_image_list_by_tags(self, tag_list, user_no=None):
         if (user_no):
