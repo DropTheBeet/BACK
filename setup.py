@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 install_packages = [
     'flask==1.1.2',
     'flask_script==2.0.6',
-    'flask_twisted==0.1.2',
     'sqlalchemy==1.3.22',
     'flask-sqlalchemy==2.4.4',
     'flask-cors==3.0.9',
@@ -11,6 +10,7 @@ install_packages = [
     'jwt==1.1.0',
     'bcrypt==3.2.0',
     'boto3==1.16.47',
+    'image==1.5.33'
 ]
 
 setup(name="drop_the_bit",
