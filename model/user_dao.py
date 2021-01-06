@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from model.models import User
 
 class UserDAO:

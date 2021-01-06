@@ -4,8 +4,8 @@ from PIL import Image
 class ImageService:
     def __init__(self, image_dao, config, s3_client):
         self.image_dao = image_dao
-        self.config    = config
-        self.s3        = s3_client
+        self.config = config
+        self.s3 = s3_client
 
     def get_image_list_by_id(self, user_no):
         return self.image_dao.get_image_list_by_id(user_no)
@@ -15,6 +15,12 @@ class ImageService:
 
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_dtail(img_no, user_no)
+
+    def put_tags_on_image_by_tensor(self, upload_image, img_no):
+        # 텐서 서버 이미지 전송
+        # 서버에서  태그랑, 이미지 디텍션 정보 받기
+        # 받은 정보 sql에 저장
+        pass
 
     def get_recommended_image_by_tensor(self, recommended_tags_rating, user_no):
         ## 추천시스템 알고리즘 활용 tag, rating 딕셔너리 값 매개변수에 삽입
@@ -27,7 +33,7 @@ class ImageService:
     def get_like_image_by_id(self, user_no):
         return self.image_dao.get_like_image_list_by_id(user_no)
 
-    def get_image_info(self, img_no):   #텐서 서버에서 받은 이미지에  정보에 추가 정보를 가져옴
+    def get_image_info(self, img_no):  # 텐서 서버에서 받은 이미지에  정보에 추가 정보를 가져옴
         return self.image_dao.get_image_info(img_no)
 
     def like_or_unlike_by_id_img(self, img_no, user_no):
@@ -65,12 +71,7 @@ class ImageService:
         # sql에서 img_no로  파일명을 받아옴,
         self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='파일명')
         self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='thum_' + '파일명')
-        #성공 했을시
+
+        # 성공 했을시
         # sql에서 파일 번호 지움
         return self.image_dao.delete_image(img_no)
-
-
-
-
-
-

@@ -1,4 +1,5 @@
 from sqlalchemy import text
+from model.models import Tag
 
 class TagDAO:
     def __init__(self, database):

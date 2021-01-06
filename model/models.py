@@ -16,6 +16,7 @@ class Category(db.Model):
         return {x.name: getattr(self, x.name) for x in self.__table__.columns}
 
 
+
 class Click_data(db.Model):
     __tablename__ = 'click_data'
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
@@ -26,8 +27,10 @@ class Click_data(db.Model):
     type = db.Column(db.String(1), nullable=False)
     click_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
+
+
     def as_dict(self):
-        return {x.name: getattr(self, x.name) for x in self.__table__.columns}
+        return {x.name: getattr(self, x.name) for x in self.__table__.columns}\
 
 
 class Image(db.Model):
