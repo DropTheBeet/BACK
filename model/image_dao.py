@@ -1,6 +1,6 @@
 from sqlalchemy import text
-from model.VO import Image
-from util import query2list
+from model.models import Image
+from model.util import query2list
 
 class ImageDAO:
     def __init__(self, database):
@@ -19,8 +19,6 @@ class ImageDAO:
     def get_image_list_by_tags(self, tag_list, user_no=None):
         if (user_no):
             user_images = self.db.execute(text("""
-    
-    
                     """), {
                 'user_no': user_no,
                 'tag_no' : tag_list
