@@ -1,7 +1,7 @@
 db = {
-    'user' : 'root',
+    'user' : 'bit',
     'password' : 'test',
-    'host' : 'localhost',
+    'host' : '14.32.18.169',
     'port' : 3306,
     'database' : 'beet'
 }
