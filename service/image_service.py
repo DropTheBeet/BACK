@@ -7,8 +7,8 @@ class ImageService:
         self.config = config
         self.s3 = s3_client
 
-    def get_image_list_by_id(self, user_no):
-        return self.image_dao.get_image_list_by_id(user_no)
+    def get_image_list_by_user(self, user_no):
+        return self.image_dao.get_image_list_by_user(user_no)
 
     def get_image_list_by_tags(self, tag_list, user_no=None):
         return self.image_dao.get_image_list_by_tags(tag_list, user_no)
@@ -30,14 +30,14 @@ class ImageService:
         recommended_image_no_by_tensor
         return self.image_dao.get_image_info(recommended_image_no_by_tensor)
 
-    def get_like_image_by_id(self, user_no):
-        return self.image_dao.get_like_image_list_by_id(user_no)
+    def get_like_image_by_user(self, user_no):
+        return self.image_dao.get_like_image_list_by_user(user_no)
 
     def get_image_info(self, img_no):  # 텐서 서버에서 받은 이미지에  정보에 추가 정보를 가져옴
         return self.image_dao.get_image_info(img_no)
 
-    def like_or_unlike_by_id_img(self, img_no, user_no):
-        return self.image_dao.like_or_unlike_by_id_img(img_no, user_no)
+    def like_or_unlike_by_user_img(self, img_no, user_no):
+        return self.image_dao.like_or_unlike_by_user_img(img_no, user_no)
 
     def insert_like(self, img_no, user_no):
         return self.image_dao.insert_like(img_no, user_no)
