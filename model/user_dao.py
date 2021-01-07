@@ -22,10 +22,7 @@ class UserDAO:
         if _user is None:
             return None
 
-        return {
-            'user_no'         : _user[0].user_no,
-            'hashed_password' : _user[0].user_pw
-        }
+        return _user[0].as_dict()
 
 
 
