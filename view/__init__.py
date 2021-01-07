@@ -84,11 +84,11 @@ def create_endpoints(app, services):
 
     @app.route('/home', methods=['GET'])
     @login_required
-    def get_home_image_by_id():
+    def get_home_image_by_user():
         user_no = g.user_no
         user_id = g.user_id
-        tag_list = tag_service.get_tag_list_by_id(user_no)
-        user_images = image_service.get_image_list_by_id(user_no)
+        tag_list = tag_service.get_tag_list_by_user(user_no)
+        user_images = image_service.get_image_list_by_user(user_no)
         if user_images:
             return jsonify({
                 'img_info' : user_images,
@@ -118,7 +118,7 @@ def create_endpoints(app, services):
     @login_required
     def get_image_detail(img_no):
         user_no = g.user_no
-        like_or_unlike = image_service.like_or_unlike_by_id_img(img_no, user_no)
+        like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
         original_image = image_service.get_image_detail(img_no, user_no)
         if original_image:
             return jsonify({
@@ -134,7 +134,7 @@ def create_endpoints(app, services):
     @login_required
     def insert_or_delete_like(img_no):
         user_no = g.user_no
-        like_or_unlike = image_service.like_or_unlike_by_id_img(img_no, user_no)
+        like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
         if(like_or_unlike):
             success = image_service.delete_like(img_no, user_no)
             return success
@@ -205,9 +205,9 @@ def create_endpoints(app, services):
 
     @app.route('/likeimage', methods=['GET'])
     @login_required
-    def get_like_image_by_id():
+    def get_like_image_by_user():
         user_no = g.user_no
-        like_images = image_service.get_like_image_by_id(user_no)
+        like_images = image_service.get_like_image_by_user(user_no)
         if like_images:
             return jsonify({
                 'img_info' : like_images,
