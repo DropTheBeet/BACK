@@ -1,10 +1,6 @@
 
-def query2list(query, select_cols):
+def query2list(query, select_cols=None):
     list = []
     for row in query:
-        d = {}
-        for column in row.__table__.columns:
-            if column.name in select_cols:
-                d[column.name] = str(getattr(row, column.name))
-        list.append(d)
+        list.append(row.as_dict(select_cols))
     return list
