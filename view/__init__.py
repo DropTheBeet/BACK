@@ -59,7 +59,7 @@ def create_endpoints(app, services):
 ## id, 비밀번호 만 들어옴
     @app.route("/sign-up", methods=['POST'])
     def sign_up():
-        new_user = request.json # user_id, password
+        new_user = request.json # user_id, user_pw
         new_user = user_service.create_new_user(new_user)
 
         return jsonify(new_user)
@@ -86,12 +86,14 @@ def create_endpoints(app, services):
     @login_required
     def get_home_image_by_id():
         user_no = g.user_no
+        user_id = g.user_id
         tag_list = tag_service.get_tag_list_by_id(user_no)
         user_images = image_service.get_image_list_by_id(user_no)
         if user_images:
             return jsonify({
                 'img_info' : user_images,
                 'user_no' : user_no,
+                'user_id' : user_id,
                 'tag_list' : tag_list   #대분류,중분류,태그
             })
         else:
@@ -154,7 +156,9 @@ def create_endpoints(app, services):
             return 'File is missing', 404
 
         filename = secure_filename(upload_image.filename)
-        image_service.upload_image(upload_image, filename, user_no)
+        uploaded_image_info = image_service.upload_image(upload_image, filename, user_no)
+        img_no = uploaded_image_info['img_no']
+        image_tags_by_tensor = image_service.put_tags_on_image_by_tensor(upload_image, img_no)
 
         return '', 200
 
