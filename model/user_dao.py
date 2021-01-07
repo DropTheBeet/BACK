@@ -5,19 +5,27 @@ class UserDAO:
     def __init__(self, database):
         self.db = database;
 
+    # 사용자 데이터 삽입 : 회원가입 시
     def insert_user(self, user):                # 입력값 : { "user_id" : "example_id", "user_pw" : "hashed_pw" }
         _user = User(user['user_id'], user['user_pw'])
         try:
             self.db.session.add(_user)
             self.db.session.commit()
-        except:
+        except Exception as e:
             print("INSERT_USER 실패 :", user)
+            print(e)
             return False
 
         return True
 
+    # 사용자 정보 조회 : 로그인 시 사용자의 번호 및 비밀번호를 조회
     def get_user_no_and_password(self, user_id):
-        _user = User.query.filter_by(user_id=user_id)
+        try:
+            _user = User.query.filter_by(user_id=user_id)
+        except Exception as e:
+            print("GET_USER_NO_AND_PASSWORD 실패 :", user_id)
+            print(e)
+            return False;
 
         if _user is None:
             return None
