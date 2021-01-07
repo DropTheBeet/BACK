@@ -5,8 +5,13 @@ class TagDAO:
     def __init__(self, database):
         self.db = database
 
-    def get_tag_list_by_id(self, user_no):
-        _rec_tag = Rec_tag.query.filter_by(img_no=user_no).group_by(Rec_tag.tag_no).all()
+    def get_tag_list_by_user(self, user_no):
+        try:
+            _rec_tag = Rec_tag.query.filter_by(img_no=user_no).group_by(Rec_tag.tag_no).all()
+        except Exception as e:
+            print("GET_TAG_LIST_BY_USER 실패 : user_no = {}".format(user_no))
+            print(e)
+            return False
 
         tag_list = []
 
@@ -25,7 +30,12 @@ class TagDAO:
 
 
     def get_tag_list_all(self):
-        _tags = Tag.query.all()
+        try:
+            _tags = Tag.query.all()
+        except Exception as e:
+            print("GET_TAG_LIST_ALL 실패 : ")
+            print(e)
+            return False
         tag_list = []
         for t in _tags:
             d = t.as_dict()
