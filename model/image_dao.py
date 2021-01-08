@@ -176,7 +176,6 @@ class ImageDAO:
     def like_or_unlike_by_user_img(self, img_no, user_no):
         try:
             _like = Likes.query.filter_by(img_no=img_no, user_no=user_no).first()
-            print(_like.as_dict())
         except Exception as e:
             print("LIKE_OR_UNLIKE_BY_USER_IMG 실패 : img_no = {}, user_no = {}".format(img_no, user_no))
             print(e)
