@@ -136,11 +136,11 @@ def create_endpoints(app, services):
         user_no = g.user_no
         like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
         if(like_or_unlike):
-            success = image_service.delete_like(img_no, user_no)
-            return success
+            image_service.delete_like(img_no, user_no)
+            return '', 200
         else:
-            success = image_service.insert_like(img_no, user_no)
-            return success
+            image_service.insert_like(img_no, user_no)
+            return '', 200
 
 
     @app.route('/home/upload', methods=['POST'])

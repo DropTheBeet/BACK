@@ -14,7 +14,7 @@ class ImageService:
         return self.image_dao.get_image_list_by_tags(tag_list, user_no)
 
     def get_image_detail(self, img_no, user_no):
-        return self.image_dao.get_image_dtail(img_no, user_no)
+        return self.image_dao.get_image_detail(img_no, user_no)
 
     def put_tags_on_image_by_tensor(self, upload_image, img_no):
         # 텐서 서버 이미지 전송
@@ -43,7 +43,7 @@ class ImageService:
         return self.image_dao.insert_like(img_no, user_no)
 
     def delete_like(self, img_no, user_no):
-        return self.image_dao.delte_like(img_no, user_no)
+        return self.image_dao.delete_like(img_no, user_no)
 
     def upload_image(self, upload_image, filename, user_no):
         thum_image = Image.open(upload_image)
