@@ -52,8 +52,9 @@ def create_endpoints(app, services):
     image_service = services.image_service
 
     @app.route("/ping", methods=['GET'])
-    def ping():
-        return "pong"
+    def pin():
+
+        return "pongg"
 
 
 ## id, 비밀번호 만 들어옴
