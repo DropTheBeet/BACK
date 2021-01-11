@@ -1,11 +1,17 @@
 from PIL import Image
+import io
+from datetime import datetime
+import requests
+# response = requests.get(U) response.status_code response.text
+# data = {'param1': 'value1', 'param2': 'value'} res = requests.post(self.tensor, data=data)
 
 
 class ImageService:
-    def __init__(self, image_dao, config, s3_client):
+    def __init__(self, image_dao, config, s3_client, tensor_server_url):
         self.image_dao = image_dao
         self.config = config
         self.s3 = s3_client
+        self.tensor = tensor_server_url
 
     def get_image_list_by_user(self, user_no):
         return self.image_dao.get_image_list_by_user(user_no)
@@ -16,11 +22,12 @@ class ImageService:
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_detail(img_no, user_no)
 
-    def put_tags_on_image_by_tensor(self, upload_image, img_no):
+    def insert_image(self, upload_image_info):
         # 텐서 서버 이미지 전송
         # 서버에서  태그랑, 이미지 디텍션 정보 받기
-        # 받은 정보 sql에 저장
-        pass
+        # upload_image_info에 받은정보 추가
+        upload_image_info['tag_data'] = 0
+        return self.image_dao.insert_image(self, upload_image_info)
 
     def get_recommended_image_by_tensor(self, recommended_tags_rating, user_no):
         ## 추천시스템 알고리즘 활용 tag, rating 딕셔너리 값 매개변수에 삽입
@@ -46,24 +53,39 @@ class ImageService:
         return self.image_dao.delete_like(img_no, user_no)
 
     def upload_image(self, upload_image, filename, user_no):
+        filename = str(datetime.utcnow()) + filename
+        thumfilename = "thum_" + filename
+        # #셈네일 만들기
+        original_image = Image.open(upload_image)
+        # #이미지 사이즈 측정
+        img_size = original_image.size
+        in_mem_file = io.BytesIO()
+        original_image.save(in_mem_file, format=original_image.format)
+        in_mem_file.seek(0)
+        self.s3.upload_fileobj(
+            in_mem_file,
+            self.config['S3_BUCKET'],
+            filename
+        )
+
         thum_image = Image.open(upload_image)
         thum_image.thumbnail((190, 190))
-        thumfilename = "_thum" + filename
+        thum_in_mem_file = io.BytesIO()
+        thum_image.save(thum_in_mem_file, format=thum_image.format)
+        thum_in_mem_file.seek(0)
         self.s3.upload_fileobj(
-            thum_image,
+            thum_in_mem_file,
             self.config['S3_BUCKET'],
             thumfilename
         )
 
-        self.s3.upload_fileobj(
-            upload_image,
-            self.config['S3_BUCKET'],
-            filename
-        )
         thum_url = f"{self.config['S3_BUCKET_URL']}{thumfilename}"
         img_url = f"{self.config['S3_BUCKET_URL']}{filename}"
 
-        return self.image_dao.upload_image(thum_url, img_url, user_no, filename)
+
+        img = {'filename':filename, 'img_url':img_url, 'thum_url':thum_url, 'user_no':user_no, 'img_w':img_size[0], 'img_h':img_size[1]}
+
+        return img
 
 
 
