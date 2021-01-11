@@ -66,7 +66,7 @@ def create_endpoints(app, services):
 
     @app.route('/login', methods=['POST'])
     def login():
-        credential = request.json #user_id, password
+        credential = request.json #user_id, user_pw
         authorized = user_service.login(credential)
 
         if authorized:
@@ -147,6 +147,8 @@ def create_endpoints(app, services):
     @login_required
     def upload_image():
         user_no = g.user_no
+        print(request.files)
+
         if 'upload_image' not in request.files:
             return 'File is missing', 404
 
@@ -156,10 +158,10 @@ def create_endpoints(app, services):
             return 'File is missing', 404
 
         filename = secure_filename(upload_image.filename)
-        uploaded_image_info = image_service.upload_image(upload_image, filename, user_no)
-        img_no = uploaded_image_info['img_no']
-        image_tags_by_tensor = image_service.put_tags_on_image_by_tensor(upload_image, img_no)
-
+        upload_image_info = image_service.upload_image(upload_image, filename, user_no)
+        print(upload_image_info)
+        # 비동기 처리하기
+        image_service.insert_image(upload_image_info)
         return '', 200
 
     @app.route('/home/delete/<int:img_no>', methods=['GET'])
