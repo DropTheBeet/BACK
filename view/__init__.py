@@ -178,11 +178,10 @@ def create_endpoints(app, services):
     def get_search_tags_public_recommend_image():
         user_no = g.user_no
         search_tag_list = tag_service.get_public_tag_list() #  검색용태그 리스트
-        recommended_tags_rating = tag_service.get_tags_rating(user_no)  # tag별 rating값 받음 딕셔너리 형태
-        recommended_image_by_tensor = image_service.get_recommended_image_by_tensor(recommended_tags_rating, user_no) ##추천된 tag기준으로 이미지 파일 추천 받음
-        if recommended_image_by_tensor:
+        recommended_image = image_service.get_recommend_image_list_by_user(user_no) ##유저기준 이미지 파일 추천 받음
+        if recommended_image:
             return jsonify({
-                'img_info': recommended_image_by_tensor,
+                'img_info': recommended_image,
                 'user_no': user_no,
                 'search_tag_list': search_tag_list
             })
@@ -217,6 +216,9 @@ def create_endpoints(app, services):
             })
         else:
             return '', 404
+
+
+
 
 
 

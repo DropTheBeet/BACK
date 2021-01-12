@@ -4,10 +4,11 @@ import boto3
 from flask import Flask
 from flask_cors import CORS
 
-from model import UserDAO, TagDAO, ImageDAO
+from model import UserDAO, TagDAO, ImageDAO, ModelDAO
 from model.models import db
 from service import UserService, ImageService, TagService
 from view import create_endpoints
+
 
 import time
 import threading
@@ -44,6 +45,12 @@ def create_app(test_config=None):
     user_dao = UserDAO(db)
     tag_dao = TagDAO(db)
     image_dao = ImageDAO(db)
+    # model_dao = ModelDAO(db)
+
+    ## Threading_Timer
+    # config.thread_run(model_dao.update_tag_preferences(), model_dao.set_recommend_images())
+
+
 
     ## Business Layer
     s3_client = boto3.client(
@@ -51,6 +58,7 @@ def create_app(test_config=None):
         aws_access_key_id     = app.config['S3_ACCESS_KEY'],
         aws_secret_access_key = app.config['S3_SECRET_KEY']
     )
+
 
     services = Services
     services.user_service = UserService(user_dao, app.config)
