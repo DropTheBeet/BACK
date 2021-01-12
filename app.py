@@ -48,12 +48,10 @@ def create_app(test_config=None):
         aws_secret_access_key = app.config['S3_SECRET_KEY']
     )
 
-    tensor_server_url = app.config['TENSOR_URL']
-
     services = Services
     services.user_service = UserService(user_dao, app.config)
     services.tag_service = TagService(tag_dao)
-    services.image_service = ImageService(image_dao, app.config, s3_client, tensor_server_url)
+    services.image_service = ImageService(image_dao, app.config, s3_client)
 
 
     ## 엔드포인트들을 생성

@@ -6,13 +6,6 @@ db = {
     'database' : 'beet'
 }
 
-tensor_server = {
-    'host' : '*',
-    'port' : '*'
-}
-
-TENSOR_URL = f"{tensor_server['host']}:{tensor_server['port']}"
-
 
 DB_URL                = f"mysql+mysqlconnector://{db['user']}:{db['password']}@{db['host']}:{db['port']}/{db['database']}?charset=utf8"
 JWT_SECRET_KEY        = 'SOME_SUPER_SECRET_KEY'

@@ -1,5 +1,5 @@
 from sqlalchemy import and_, func, desc
-from model.models import Image, User, Rec_tag, Likes, Tag, R_image
+from model.models import Image, User, Rec_tag, Likes, Tag
 from model.util import query2list
 
 
@@ -67,20 +67,6 @@ class ImageDAO:
         except Exception as e:
             # Error 발생
             print("GET_IMAGE_LIST_BY_TAGS 실패 : tag_list = {}, user_no = {}".format(tag_list, user_no))
-            print(e)
-            return False
-
-    # 사용자의 추천 이미지 정보 조회
-    def get_recommend_image_list_by_user(self, user_no):
-        try:
-            _r_imgs = R_image.query.filter_by(user_no=user_no).all()    # 사용자 번호에 해당하는 추천 이미지 조회
-            result = []
-            for img in _r_imgs:
-                result.append(img.as_dict(['img_no', 'thum_url', 'reg_date']))
-            return result           # 추출된 이미지 데이터를 리스트로 반환
-                                    # [{'img_no' : img_no, 'thum_url' : thum_url, 'reg_date' : reg_date}, ..., ]
-        except Exception as e:
-            print("GET_RECOMMEND_IMAGE_LIST_BY_USER 실패 : user_no = {}".format(user_no))
             print(e)
             return False
 
@@ -176,9 +162,11 @@ class ImageDAO:
     def insert_rec_tag(self, img_no, tag_data):
         try:
             for rt in tag_data:
+                # 태그 이름에 해당하는 태그 번호를 태그 테이블에서 추출
+                t_no = Tag.query.filter_by(tag=rt['tag']).first().tag_no
                 # 삽입할 인식된 태그 데이터 생성
                 rec_tag = Rec_tag(img_no,
-                                  rt['t_no'],
+                                  t_no,
                                   rt['width'],
                                   rt['height'],
                                   rt['point_x'],

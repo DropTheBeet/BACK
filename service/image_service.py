@@ -1,17 +1,15 @@
 from PIL import Image
+import requests, json
 import io
 from datetime import datetime
-import requests
-# response = requests.get(U) response.status_code response.text
-# data = {'param1': 'value1', 'param2': 'value'} res = requests.post(self.tensor, data=data)
+
 
 
 class ImageService:
-    def __init__(self, image_dao, config, s3_client, tensor_server_url):
+    def __init__(self, image_dao, config, s3_client):
         self.image_dao = image_dao
         self.config = config
         self.s3 = s3_client
-        self.tensor = tensor_server_url
 
     def get_image_list_by_user(self, user_no):
         return self.image_dao.get_image_list_by_user(user_no)
@@ -22,12 +20,35 @@ class ImageService:
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_detail(img_no, user_no)
 
+
+
+
+
     def insert_image(self, upload_image_info):
-        # 텐서 서버 이미지 전송
-        # 서버에서  태그랑, 이미지 디텍션 정보 받기
-        # upload_image_info에 받은정보 추가
-        upload_image_info['tag_data'] = 0
-        return self.image_dao.insert_image(self, upload_image_info)
+        URL = 'http://a0bed9c86249.ngrok.io/recognized_tag'
+        headers = {
+            'Content-Type': 'application/json;'
+        }
+        data = {
+            'img_url': upload_image_info['img_url']}
+        res = requests.post(URL, data=json.dumps(data), headers=headers)
+        res.raise_for_status()
+        tags_info = json.loads(res.text)
+        upload_image_info['tag_data'] = []
+
+        for tag in tags_info['tag']:
+            tag_info = {}
+            tag_info['tag_no'] = list(tag.keys())[0]
+            tag_values = list(tag.values())
+            print(tag_values)
+            tag_info['point_x'] = tag_values[0][0]
+            tag_info['point_y'] = tag_values[0][1]
+            tag_info['width'] = tag_values[0][2]
+            tag_info['height'] = tag_values[0][3]
+            upload_image_info['tag_data'].append(tag_info)
+
+        print(upload_image_info['tag_data'])
+        return self.image_dao.insert_image(upload_image_info)
 
     def get_recommended_image_by_tensor(self, recommended_tags_rating, user_no):
         ## 추천시스템 알고리즘 활용 tag, rating 딕셔너리 값 매개변수에 삽입
