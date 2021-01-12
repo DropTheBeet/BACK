@@ -22,7 +22,9 @@ class RecModel:
 
         self.set_rating(x_train)
 
-        recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=10)
+        n_size = self.best_neighbor_size()  # 최적의 neighbor_size
+
+        recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=n_size)
         recommend_list = recom_tag
 
         recommend_list = list(recommend_list.index)
@@ -184,3 +186,14 @@ class RecModel:
         norm2 = np.sqrt(np.sum(np.square(v2)))
         dot = np.dot(v1, v2)
         return dot / (norm1 * norm2)
+
+    # 최적의 이웃의 수 정하기
+    def best_neighbor_size(self):
+        best_match = 6
+        for neighbor_size in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
+            score = self.score(self.CF_knn_bias_sig, neighbor_size)
+            if score < best_match:
+                best_match = score
+                best_neighbor_size = neighbor_size
+                best_match_RMSE = score
+        return best_neighbor_size, best_match_RMSE
