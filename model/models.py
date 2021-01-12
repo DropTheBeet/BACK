@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.mysql import DOUBLE
 
 from datetime import datetime
 
@@ -118,8 +119,15 @@ class R_image(db.Model):
     __tablename__ = 'recommendations'   # MySQL 테이블 이름
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}    # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
 
-    user_no = db.Column(db.Integer, db.ForeignKey('user.user_no'), primary_key=True)    # 사용자 번호 : 정수형, 외래키(사용자 테이블의 사용자 번호), 기본키
-    img_no = db.Column(db.Integer, db.ForeignKey('image.img_no'), primary_key=True)     # 이미지 번호 : 정수형, 외래키(이미지 테이블의 이미지 번호), 기본키
+    no = db.Column(db.Integer, primary_key=True, autoincrement=True)   # 추천 번호 : 정수형, 기본키, 자동 증가
+    user_no = db.Column(db.Integer, db.ForeignKey('user.user_no'))      # 사용자 번호 : 정수형, 외래키(사용자 테이블의 사용자 번호)
+    img_no = db.Column(db.Integer, db.ForeignKey('image.img_no'))       # 이미지 번호 : 정수형, 외래키(이미지 테이블의 이미지 번호)
+
+    image = db.relationship('Image', backref='recommend')  # 이미지 테이블과 관계 생성 (Image(클래스이름) 참조, backref : 이미지 테이블에서 참조하는 이름)
+
+    def __init__(self, user_no, img_no):
+        self.user_no = user_no
+        self.img_no = img_no
 
     # 속성을 딕셔너리 형태로 반환
     def as_dict(self, select_cols=None):
@@ -155,7 +163,7 @@ class Rec_tag(db.Model):
         return {x.name: getattr(self, x.name) for x in self.__table__.columns if
                 (select_cols is None) or (x.name in select_cols)}
 
-# 태그별 테이블
+# 태그 테이블
 class Tag(db.Model):
     __tablename__ = 'tag'    # MySQL 테이블 이름
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}   # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
@@ -178,6 +186,16 @@ class Tag_pf(db.Model):
     user_no = db.Column(db.Integer, db.ForeignKey('user.user_no'), primary_key=True)    # 사용자 번호 : 정수형, 외래키(사용자 테이블의 사용자 번호 참조), 기본키
     tag_no = db.Column(db.Integer, db.ForeignKey('tag.tag_no'), primary_key=True)       # 태그 번호 : 정수형, 외래키(태그 테이블의 태그 번호 참조), 기본키
     preference = db.Column(db.Float, default=0)                                         # 선호도 : 실수형, 기본값 : 0
+
+    def __init__(self, user_no, tag_no, preference):
+        self.user_no = user_no
+        self.tag_no = tag_no
+        self.preference = preference
+
+    def __init__(self, user_no, tag_no, preference):
+        self.user_no = user_no
+        self.tag_no = tag_no
+        self.preference = preference
 
     # 속성을 딕셔너리 형태로 반환
     def as_dict(self, select_cols=None):
@@ -210,3 +228,28 @@ class User(db.Model):
         return {x.name: getattr(self, x.name) for x in self.__table__.columns if
                 (select_cols is None) or (x.name in select_cols)}
 
+
+class R_Input_DataSet(db.Model):
+    __tablename__ = 'r_input_dataset'  # MySQL 테이블 이름
+    __table_args__ = {'mysql_collate': 'utf8_general_ci'}  # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
+
+    user_no = db.Column(db.Integer, db.ForeignKey('user.user_no'), primary_key=True)  # 분류 번호 : 정수형, 기본키, 자동 증가
+    tag_no = db.Column(db.Integer, db.ForeignKey('major.major_no'), primary_key=True)       # 대분류 번호 : 정수형, 외래키(대분류 테이블의 대분류 번호 참조), Not null
+    tag = db.Column(db.String, db.ForeignKey('tag.tag'))
+    u_cnt = db.Column(db.Integer)
+    l_cnt = db.Column(db.Integer)
+    s_cnt_d = db.Column(db.Integer)
+    s_cnt_w = db.Column(db.Integer)
+    s_cnt_m = db.Column(db.Integer)
+    r_cnt_d = db.Column(db.Integer)
+    r_cnt_w = db.Column(db.Integer)
+    r_cnt_m = db.Column(db.Integer)
+    major_no = db.Column(db.Integer, db.ForeignKey('major.major_no'))
+    middle_no = db.Column(db.Integer, db.ForeignKey('middle.middle_no'))  # 중분류 번호 : 정수형, 외래키(중분류 테이블의 대분류 번호 참조), Not null
+    c_major = db.Column(db.Integer, db.ForeignKey('major.c_major'))
+    c_middle = db.Column(db.Integer, db.ForeignKey('middle.c_middle'))
+
+    # 속성을 딕셔너리 형태로 반환
+    def as_dict(self, select_cols=None):
+        return {x.name: getattr(self, x.name) for x in self.__table__.columns if
+                (select_cols is None) or (x.name in select_cols)}
