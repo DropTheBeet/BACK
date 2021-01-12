@@ -25,7 +25,7 @@ class ImageService:
 
 
     def insert_image(self, upload_image_info):
-        URL = 'http://a0bed9c86249.ngrok.io/recognized_tag'
+        URL = 'http://e4933cdbab5e.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -50,13 +50,8 @@ class ImageService:
         print(upload_image_info['tag_data'])
         return self.image_dao.insert_image(upload_image_info)
 
-    def get_recommended_image_by_tensor(self, recommended_tags_rating, user_no):
-        ## 추천시스템 알고리즘 활용 tag, rating 딕셔너리 값 매개변수에 삽입
-        ## 태그와, 이미지에 관한 데이터를 텐서서버에 넘김
-        ##  텐서 서버에 user_no와, 태그의 추천도를 넘김
-        ##  머신러닝 서버에서  유저의 추천 이미지들을 받음(이미지 번호)
-        recommended_image_no_by_tensor
-        return self.image_dao.get_image_info(recommended_image_no_by_tensor)
+    def get_recommend_image_list_by_user(self, user_no):
+        return self.image_dao.get_recommend_image_list_by_user(user_no)
 
     def get_like_image_by_user(self, user_no):
         return self.image_dao.get_like_image_list_by_user(user_no)
@@ -86,7 +81,10 @@ class ImageService:
         self.s3.upload_fileobj(
             in_mem_file,
             self.config['S3_BUCKET'],
-            filename
+            filename,
+            ExtraArgs={
+            "ContentType": 'image/jpeg'
+            }
         )
 
         thum_image = Image.open(upload_image)
@@ -97,7 +95,10 @@ class ImageService:
         self.s3.upload_fileobj(
             thum_in_mem_file,
             self.config['S3_BUCKET'],
-            thumfilename
+            thumfilename,
+            ExtraArgs={
+                "ContentType": 'image/jpeg'
+            }
         )
 
         thum_url = f"{self.config['S3_BUCKET_URL']}{thumfilename}"

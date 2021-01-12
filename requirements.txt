@@ -9,7 +9,6 @@ click==7.1.2
 constantly==15.1.0
 cryptography==3.2.1
 Django==3.1.5
-drop-the-bit==0.1
 flask==1.1.2
 flask-cors==3.0.9
 flask-sqlalchemy==2.4.4

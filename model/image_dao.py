@@ -73,10 +73,12 @@ class ImageDAO:
     # 추천 이미지 조회
     def get_recommend_image_list_by_user(self, user_no):
         try:
-            _r_imgs = R_image.query().filter_by(user_no=user_no).all()  # 사용자 번호에 해당하는 추천이미지 데이터 추출
+            _r_imgs = R_image.query.filter_by(user_no=user_no).all()  # 사용자 번호에 해당하는 추천이미지 데이터 추출
 
             result = []
+
             for img in _r_imgs:
+                print(img)
                 result.append(img.image.as_dict(['img_no', 'thum_url', 'reg_date']))
             return result       # 추출된 이미지 리스트로 변환하여 반환
                                 # [{'img_no' : img_no, 'thum_url' : thum_url, 'reg_date' : reg_date}, ..., ]
