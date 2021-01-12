@@ -235,8 +235,6 @@ def create_endpoints(app, services):
 
 
 
-
-
     #
     # @app.route('/profile-picture/<int:user_no>', methods=['GET'])
     # def get_profile_picture(user_no):
