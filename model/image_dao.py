@@ -179,11 +179,9 @@ class ImageDAO:
     def insert_rec_tag(self, img_no, tag_data):
         try:
             for rt in tag_data:
-                # 태그 이름에 해당하는 태그 번호를 태그 테이블에서 추출
-                t_no = Tag.query.filter_by(tag=rt['tag']).first().tag_no
                 # 삽입할 인식된 태그 데이터 생성
                 rec_tag = Rec_tag(img_no,
-                                  t_no,
+                                  rt['tag_no'],
                                   rt['width'],
                                   rt['height'],
                                   rt['point_x'],
