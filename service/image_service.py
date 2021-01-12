@@ -86,7 +86,10 @@ class ImageService:
         self.s3.upload_fileobj(
             in_mem_file,
             self.config['S3_BUCKET'],
-            filename
+            filename,
+            ExtraArgs={
+            "ContentType": 'image/jpeg'
+            }
         )
 
         thum_image = Image.open(upload_image)
@@ -97,7 +100,10 @@ class ImageService:
         self.s3.upload_fileobj(
             thum_in_mem_file,
             self.config['S3_BUCKET'],
-            thumfilename
+            thumfilename,
+            ExtraArgs={
+                "ContentType": 'image/jpeg'
+            }
         )
 
         thum_url = f"{self.config['S3_BUCKET_URL']}{thumfilename}"
