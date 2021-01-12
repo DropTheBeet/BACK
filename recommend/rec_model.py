@@ -22,7 +22,7 @@ class RecModel:
 
         self.set_rating(x_train)
 
-        n_size = self.best_neighbor_size()  # 최적의 neighbor_size
+        n_size, rmse = self.best_neighbor_size()  # 최적의 neighbor_size
 
         recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=n_size)
         recommend_list = recom_tag
