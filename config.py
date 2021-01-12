@@ -1,3 +1,6 @@
+import time
+import threading
+
 db = {
     'user' : 'bit',
     'password' : 'test',
@@ -15,3 +18,6 @@ S3_BUCKET     = "beetbitbucket"
 S3_ACCESS_KEY = "AKIAWP6LXW45RHJWSNMS"
 S3_SECRET_KEY = "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"
 S3_BUCKET_URL = f"https://s3.ap-northeast-2.amazonaws.com/{S3_BUCKET}/"
+
+def thread_run():
+    print('=====', time.ctime(), '=====')
