@@ -198,6 +198,11 @@ class ImageDAO:
 
     # 이미지 삭제
     def delete_image(self, img_no):
+        _img = Image.query.filter_by(img_no=img_no).first()     # 이미지 조회
+        if _img is not None:
+            # 이미지가 없을 경우
+            print("해당 이미지가 존재하지 않습니다. : img_no = {}".format(img_no))
+            return False
         try:
             self.db.session.query(Rec_tag).filter(
                 Rec_tag.img_no == img_no).delete()  # recognized_tag 테이블의 이미지 번호에 해당하는 데이터를 DELETE
@@ -209,7 +214,7 @@ class ImageDAO:
             print(e)
             return False
 
-        return True
+        return _img.filename    # 파일명 반환
 
     # 인식된 태그 삭제 : 사용 안함
     def delete_rec_tag(self, img_no):
