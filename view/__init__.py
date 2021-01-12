@@ -160,7 +160,6 @@ def create_endpoints(app, services):
 
         filename = secure_filename(upload_image.filename)
         upload_image_info = image_service.upload_image(upload_image, filename, user_no)
-        print(upload_image_info)
         # 비동기 처리하기
         image_service.insert_image(upload_image_info)
         return '', 200
@@ -218,8 +217,6 @@ def create_endpoints(app, services):
             })
         else:
             return '', 404
-
-
 
 
 
