@@ -1,5 +1,5 @@
 from sqlalchemy import and_, func, desc
-from model.models import Image, User, Rec_tag, Likes, Tag
+from model.models import Image, User, Rec_tag, Likes, Tag, R_image
 from model.util import query2list
 
 
@@ -69,6 +69,23 @@ class ImageDAO:
             print("GET_IMAGE_LIST_BY_TAGS 실패 : tag_list = {}, user_no = {}".format(tag_list, user_no))
             print(e)
             return False
+
+    # 추천 이미지 조회
+    def get_recommend_image_list_by_user(self, user_no):
+        try:
+            _r_imgs = R_image.query().filter_by(user_no=user_no).all()  # 사용자 번호에 해당하는 추천이미지 데이터 추출
+
+            result = []
+            for img in _r_imgs:
+                result.append(img.image.as_dict(['img_no', 'thum_url', 'reg_date']))
+            return result       # 추출된 이미지 리스트로 변환하여 반환
+                                # [{'img_no' : img_no, 'thum_url' : thum_url, 'reg_date' : reg_date}, ..., ]
+        except Exception as e:
+            # Error 발생할 경우
+            print("GET_RECOMMEND_IMAGE_LIST_BY_USER 실패 : user_no = {}".format(user_no))
+            print(e)
+            return False
+
 
     # 사용자의 좋아요한 이미지 조회
     def get_like_image_list_by_user(self, user_no):
