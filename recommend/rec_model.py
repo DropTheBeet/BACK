@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
+
 
 # 추천 모델
 class RecModel:
@@ -10,36 +12,36 @@ class RecModel:
     # MIN_RATINGS는 최소 선호도 점수를 뜻함
     MIN_RATINGS = 15
 
-    def get_recommend_images(self, user_no, user_data, taglist, rec_taglist, preferences):
+    def __init__(self, user_data, preferences):
         self.user_data = user_data
-        self.taglist = taglist
         self.tag_mean = preferences.groupby(['tag_no'])['preference'].mean()
 
         # 데이터셋 train과 test로 분리
         x = preferences.copy()
         y = preferences['user_no']
+
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, stratify=y)
 
         self.set_rating(x_train)
+        self.set_best_neighbor_size(x_test)
 
-        n_size, rmse = self.best_neighbor_size()  # 최적의 neighbor_size
+    def get_recommend_images(self, user_no, taglist, rec_taglist):
+
+        n_size = self.best_neighbor_size[0]  # 최적의 neighbor_size
 
         recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=n_size)
         recommend_list = recom_tag
 
-        recommend_list = list(recommend_list.index)
+        recom_list = list(recommend_list.index)
 
         # image no가 있는 데이터셋 불러오기
         rec_tag_df = rec_taglist
 
-        # 복사후 컬럼명 재조정하기
-        rec_tag_df = rec_tag_df.rename(columns=rec_tag_df.iloc[0])
-        # 조정후 필요없는 행 삭제
-        rec_tag_df = rec_tag_df.drop(rec_tag_df.index[0])
-
         # object형 데이터 int로 변환해주기
-        rec_tag_df[['user_no', 'tag_no', 'image_no']] = rec_tag_df[['user_no', 'tag_no', 'image_no']].apply(pd.to_numeric,
-                                                                                              errors="ignore")
+        rec_tag_df[['user_no', 'tag_no', 'image_no']] = rec_tag_df[['user_no', 'tag_no', 'image_no']].apply(
+            pd.to_numeric,
+            errors="ignore")
+
         # map - reduce 작업 (태그하나와 이미지 하나를 같은 벡터로 보고 펼쳐준 후,
         # 다시 합쳐 80개의 태그, 이미지를 하나의 벡터로 만드는 작업)
         def map_reduce(subset):
@@ -51,23 +53,25 @@ class RecModel:
 
         image_info = rec_tag_df.groupby("image_no").apply(map_reduce)
 
+        print("image_info : ", image_info)
+
         # 리스트에 담긴 값은 추천된 10개의 태그를 하나의 벡터로 만들어놓은 값이다.
         recommend_image = np.zeros(80, dtype=float)
-        for tag_no in recommend_list:
+        for tag_no in recom_list:
             t_no = int(tag_no)
             recommend_image[t_no - 1] = 1.
 
         info_list = np.array(image_info)
-
+        print("info_list : ", info_list)
         recom_list = recommend_image  # 추천 태그 리스트 벡터
-
+        print("recom_list : ", recom_list)
         return self.get_best_imgs(info_list, recom_list)
 
     def get_best_imgs(self, info_list, recom_list, num=30):
         # 상위 30개 이미지 번호와 유사도
         best_img_sims = [[-1, -1], ]
 
-        for img_no, image_vector in enumerate(info_list):
+        for img_no, image_vector in tqdm(enumerate(info_list), desc="get_best_imgs"):
             # 유사도 계산
             cos_sim = self.compute_cos_similarity(recom_list, image_vector)
 
@@ -160,11 +164,16 @@ class RecModel:
     def recom_tag(self, user_no, n_items, tags, neighbor_size=90):
         # 현 사용자가 평가한 태그 가져오기
         user_tag = self.rating_bias.loc[user_no].copy()
-        for tagname in self.rating_bias:
+
+        for tagname in tqdm(self.rating_bias, desc="recom_tag"):
             # tag를 예상 선호도에 따라 정렬하여 태그 이름으로 리턴
             user_tag.loc[tagname] = self.CF_knn_bias_sig(user_no, tagname, neighbor_size)
             tag_sort = user_tag.sort_values(ascending=False)[:n_items]
-            recom_tags = tags.loc[tag_sort.index]
+            indexs = [i - 1 for i in tag_sort.index]
+            print("n_items : {}".format(n_items))
+            print("tag_sort :")
+            print(tag_sort)
+            recom_tags = tags.loc[indexs]
             recommendations = recom_tags['tag']
 
             return recommendations
@@ -188,12 +197,14 @@ class RecModel:
         return dot / (norm1 * norm2)
 
     # 최적의 이웃의 수 정하기
-    def best_neighbor_size(self):
+    def set_best_neighbor_size(self, x_test):
         best_match = 6
-        for neighbor_size in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
-            score = self.score(self.CF_knn_bias_sig, neighbor_size)
+        best_n_size = 0
+        best_match_RMSE = 0
+        for neighbor_size in tqdm([10, 20, 30, 40, 50, 60, 70, 80, 90, 100], desc="best_neighbor_size"):
+            score = self.score(self.CF_knn_bias_sig, x_test, neighbor_size)
             if score < best_match:
                 best_match = score
-                best_neighbor_size = neighbor_size
+                best_n_size = neighbor_size
                 best_match_RMSE = score
-        return best_neighbor_size, best_match_RMSE
+        self.best_neighbor_size = [best_n_size, best_match_RMSE]
