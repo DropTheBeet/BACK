@@ -25,7 +25,7 @@ class ImageService:
 
 
     def insert_image(self, upload_image_info):
-        URL = 'http://a91ee9e963dd.ngrok.io'
+        URL = 'http://a91ee9e963dd.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -38,9 +38,8 @@ class ImageService:
 
         for tag in tags_info['tag']:
             tag_info = {}
-            tag_info['tag_no'] = list(tag.keys())[0]
+            tag_info['tag_no'] = int(list((tag.keys()))[0]) + 1
             tag_values = list(tag.values())
-            print(tag_values)
             tag_info['point_x'] = tag_values[0][0]
             tag_info['point_y'] = tag_values[0][1]
             tag_info['width'] = tag_values[0][2]

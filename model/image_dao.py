@@ -11,7 +11,7 @@ class ImageDAO:
     # 사용자가 업로드한 이미지 조회
     def get_image_list_by_user(self, user_no):
         try:
-            _images = Image.query.filter_by(user_no=user_no).all()  # 사용자 번호에 해당하는 이미지 데이터 추출
+            _images = Image.query.filter_by(user_no=user_no).order_by(Image.reg_date.desc()).all()  # 사용자 번호에 해당하는 이미지 데이터 추출
         except Exception as e:
             # Error 발생할 경우
             print("GET_IMAGE_LIST_BY_USER 실패 :", user_no)
@@ -45,7 +45,8 @@ class ImageDAO:
             if user_no:  # 사용자가 업로드한 이미지 중에서 조회할 경우
                 # SELECT * FROM image WHERE img_no IN ( second_query ) AND user_no = ( 사용자 번호 )
                 final_query = self.db.session.query(Image) \
-                    .filter(and_(Image.img_no.in_(second_query), Image.user_no == user_no))
+                    .filter(and_(Image.img_no.in_(second_query), Image.user_no == user_no))\
+                    .order_by(Image.reg_date.desc())
 
                 _images = final_query.all()
 
@@ -56,7 +57,8 @@ class ImageDAO:
             else:  # 전체 이미지 중에서 조회할 경우
                 # SELECT * FROM image WHERE img_no IN ( second_query )
                 final_query = self.db.session.query(Image) \
-                    .filter(Image.img_no.in_(second_query))
+                    .filter(Image.img_no.in_(second_query))\
+                    .order_by(Image.reg_date.desc())
 
                 _images = final_query.all()
 
@@ -73,7 +75,7 @@ class ImageDAO:
     # 추천 이미지 조회
     def get_recommend_image_list_by_user(self, user_no):
         try:
-            _r_imgs = R_image.query.filter_by(user_no=user_no).all()  # 사용자 번호에 해당하는 추천이미지 데이터 추출
+            _r_imgs = R_image.query.filter_by(user_no=user_no).order_by(Image.reg_date.desc()).all()  # 사용자 번호에 해당하는 추천이미지 데이터 추출
 
             result = []
             for i, img in enumerate(_r_imgs):
@@ -200,13 +202,11 @@ class ImageDAO:
     # 이미지 삭제
     def delete_image(self, img_no):
         _img = Image.query.filter_by(img_no=img_no).first()     # 이미지 조회
-        if _img is not None:
+        if _img is None:
             # 이미지가 없을 경우
             print("해당 이미지가 존재하지 않습니다. : img_no = {}".format(img_no))
             return False
         try:
-            self.db.session.query(Rec_tag).filter(
-                Rec_tag.img_no == img_no).delete()  # recognized_tag 테이블의 이미지 번호에 해당하는 데이터를 DELETE
             self.db.session.query(Image).filter(Image.img_no == img_no).delete()  # image 테이블의 이미지 번호에 해당하는 데이터를 DELETE
             self.db.session.commit()  # COMMIT
         except Exception as e:

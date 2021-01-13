@@ -53,8 +53,6 @@ class RecModel:
 
         image_info = rec_tag_df.groupby("image_no").apply(map_reduce)
 
-        print("image_info : ", image_info)
-
         # 리스트에 담긴 값은 추천된 10개의 태그를 하나의 벡터로 만들어놓은 값이다.
         recommend_image = np.zeros(80, dtype=float)
         for tag_no in recom_list:
@@ -62,9 +60,7 @@ class RecModel:
             recommend_image[t_no - 1] = 1.
 
         info_list = np.array(image_info)
-        print("info_list : ", info_list)
         recom_list = recommend_image  # 추천 태그 리스트 벡터
-        print("recom_list : ", recom_list)
         return self.get_best_imgs(info_list, recom_list)
 
     def get_best_imgs(self, info_list, recom_list, num=30):
