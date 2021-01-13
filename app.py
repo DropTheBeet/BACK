@@ -6,7 +6,7 @@ from flask_cors import CORS
 
 from model import UserDAO, TagDAO, ImageDAO, ModelDAO
 from model.models import db
-from service import UserService, ImageService, TagService
+from service import UserService, ImageService, TagService, ModelService
 from view import create_endpoints
 
 
@@ -45,10 +45,14 @@ def create_app(test_config=None):
     user_dao = UserDAO(db)
     tag_dao = TagDAO(db)
     image_dao = ImageDAO(db)
-    # model_dao = ModelDAO(db)
+    model_dao = ModelDAO(db)
 
-    ## Threading_Timer
-    # config.thread_run(model_dao.update_tag_preferences(), model_dao.set_recommend_images())
+    print("APP실행중")
+
+    # ## Threading_Timer
+
+
+    print("쓰레드 실행 뒤")
 
 
 
@@ -64,10 +68,13 @@ def create_app(test_config=None):
     services.user_service = UserService(user_dao, app.config)
     services.tag_service = TagService(tag_dao)
     services.image_service = ImageService(image_dao, app.config, s3_client)
+    services.model_service = ModelService(model_dao)
 
 
     ## 엔드포인트들을 생성
     create_endpoints(app, services)
+
+
 
     return app
 

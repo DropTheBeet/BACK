@@ -50,6 +50,7 @@ def create_endpoints(app, services):
     user_service = services.user_service
     tag_service = services.tag_service
     image_service = services.image_service
+    model_service = services.model_service
 
     @app.route("/ping", methods=['GET'])
     def pin():
@@ -214,6 +215,14 @@ def create_endpoints(app, services):
                 'img_info' : like_images,
                 'user_no' : user_no,
             })
+        else:
+            return '', 404
+
+    @app.route('/test', methods=['GET'])
+    def recommendation_update():
+        success = model_service.recommendation_update()
+        if(success):
+            return '', 200
         else:
             return '', 404
 
