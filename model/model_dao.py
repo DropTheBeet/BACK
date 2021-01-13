@@ -16,9 +16,6 @@ class ModelDAO:
     def __init__(self, database):
         self.db = database
 
-
-
-
     def set_model(self, exc_tags=None):     # exc_tags : 모델에 반영할 데이터 중 제외할 태그 리스트
         input_user_data = R_Input_DataSet.query.all()  # 사용자별 선호도 계산에 반영될 데이터
         tag_data = Tag.query.all()  # 태그 데이터
@@ -86,7 +83,6 @@ class ModelDAO:
 
     def set_recognized_tag_data(self, input_data, exc_tags=None):
         df = pd.DataFrame(columns=['image_no', 'user_no', 'tag_no'])
-        print(input_data)
 
         i = 0
         for data in tqdm(input_data, desc="set_recognized_tag_data"):
@@ -155,8 +151,6 @@ class ModelDAO:
 
         prefer_df2 = prefer_df.astype({'user_no':'int', 'tag_no':'int'})
 
-        print(prefer_df2)
-        print(prefer_df2.dtypes)
         return prefer_df2
 
     # 추천 이미지 테이블 세팅
@@ -165,12 +159,11 @@ class ModelDAO:
         users = User.query.all()                    # 사용자 데이터 정보 조회
 
         for u in users:
-            print(u.user_no)
+            print("user_no[{}] 추천 이미지 세팅...".format(u.user_no))
             cur_r_imgs = R_image.query.filter_by(user_no=u.user_no).all()   # 사용자 번호에 해당하는 추천 이미지 조회
             if cur_r_imgs is not None:      # 조회한 이미지가 있을 경우
                 self.db.session.query(R_image).filter(R_image.user_no == u.user_no).delete()    # 해당 데이터 삭제
             _r_imgs = self.rec_model.get_recommend_images(u.user_no, self.tag_df, self.rectag_df)  # 추천 모델을 통해 추천 이미지 생성
-            print("_r_imgs :",_r_imgs)
             for i, img in enumerate(tqdm(_r_imgs, desc="user_no[{}] insert_rec_image".format(u.user_no))):
                 i_no = int(img[0])
                 print("{}_ u_no : {}, i_no : {}".format(i, u.user_no, i_no))

@@ -32,7 +32,6 @@ class RecModel:
         recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=n_size)
         recommend_list = recom_tag
 
-        print(recommend_list.index)
         recom_list = list(recommend_list.index)
 
         # image no가 있는 데이터셋 불러오기
@@ -164,18 +163,16 @@ class RecModel:
 
     def recom_tag(self, user_no, n_items, tags, neighbor_size=90):
         # 현 사용자가 평가한 태그 가져오기
-        print(type(n_items))
-        print(self.rating_bias)
         user_tag = self.rating_bias.loc[user_no].copy()
 
         for tagname in tqdm(self.rating_bias, desc="recom_tag"):
             # tag를 예상 선호도에 따라 정렬하여 태그 이름으로 리턴
             user_tag.loc[tagname] = self.CF_knn_bias_sig(user_no, tagname, neighbor_size)
             tag_sort = user_tag.sort_values(ascending=False)[:n_items]
-            print(tag_sort)
             indexs = [i - 1 for i in tag_sort.index]
+            print("n_items : {}".format(n_items))
+            print("tag_sort :")
             print(tag_sort)
-            print(indexs)
             recom_tags = tags.loc[indexs]
             recommendations = recom_tags['tag']
 
