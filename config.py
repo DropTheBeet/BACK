@@ -1,6 +1,3 @@
-import time
-import threading
-
 db = {
     'user' : 'bit',
     'password' : 'test',
@@ -19,14 +16,7 @@ S3_ACCESS_KEY = "*"
 S3_SECRET_KEY = "*"
 S3_BUCKET_URL = f"https://s3.ap-northeast-2.amazonaws.com/{S3_BUCKET}/"
 
-def thread_run(method1, method2):
-    print('=====',time.ctime(),'=====')
-    for i in range(1, 50001):
-        method1()
-        method2()
-        print('Thread running - ', i)
 
-    threading.Timer(600, thread_run).start()
 
 
 
