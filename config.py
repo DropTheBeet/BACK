@@ -16,7 +16,3 @@ S3_ACCESS_KEY = "*"
 S3_SECRET_KEY = "*"
 S3_BUCKET_URL = f"https://s3.ap-northeast-2.amazonaws.com/{S3_BUCKET}/"
 
-
-
-
-

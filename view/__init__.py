@@ -168,7 +168,8 @@ def create_endpoints(app, services):
     @app.route('/home/delete/<int:img_no>', methods=['GET'])
     @login_required
     def delete_image(img_no):
-       image_service.delete_image(img_no)
+       deleted_filename = image_service.delete_image(img_no)
+       print(deleted_filename)
 
        return '', 200
 

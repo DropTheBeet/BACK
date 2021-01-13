@@ -202,7 +202,7 @@ class ImageDAO:
     # 이미지 삭제
     def delete_image(self, img_no):
         _img = Image.query.filter_by(img_no=img_no).first()     # 이미지 조회
-        if _img is not None:
+        if _img is None:
             # 이미지가 없을 경우
             print("해당 이미지가 존재하지 않습니다. : img_no = {}".format(img_no))
             return False
