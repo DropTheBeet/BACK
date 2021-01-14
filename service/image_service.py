@@ -25,7 +25,7 @@ class ImageService:
 
 
     def insert_image(self, upload_image_info):
-        URL = 'http://a91ee9e963dd.ngrok.io/recognized_tag'
+        URL = 'http://cc8e1ccfb7d9.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -62,10 +62,10 @@ class ImageService:
         return self.image_dao.like_or_unlike_by_user_img(img_no, user_no)
 
     def insert_like(self, img_no, user_no):
-        return self.image_dao.insert_like(img_no, user_no)
+        return self.image_dao.insert_like(user_no, img_no)
 
     def delete_like(self, img_no, user_no):
-        return self.image_dao.delete_like(img_no, user_no)
+        return self.image_dao.delete_like(user_no, img_no)
 
     def upload_image(self, upload_image, filename, user_no):
         filename = str(datetime.utcnow()) + filename
