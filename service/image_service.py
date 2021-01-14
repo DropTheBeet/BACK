@@ -25,7 +25,7 @@ class ImageService:
 
 
     def insert_image(self, upload_image_info):
-        URL = 'http://e4933cdbab5e.ngrok.io/recognized_tag'
+        URL = 'http://cc8e1ccfb7d9.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -38,9 +38,8 @@ class ImageService:
 
         for tag in tags_info['tag']:
             tag_info = {}
-            tag_info['tag_no'] = list(tag.keys())[0]
+            tag_info['tag_no'] = int(list((tag.keys()))[0]) + 1
             tag_values = list(tag.values())
-            print(tag_values)
             tag_info['point_x'] = tag_values[0][0]
             tag_info['point_y'] = tag_values[0][1]
             tag_info['width'] = tag_values[0][2]
@@ -63,10 +62,10 @@ class ImageService:
         return self.image_dao.like_or_unlike_by_user_img(img_no, user_no)
 
     def insert_like(self, img_no, user_no):
-        return self.image_dao.insert_like(img_no, user_no)
+        return self.image_dao.insert_like(user_no, img_no)
 
     def delete_like(self, img_no, user_no):
-        return self.image_dao.delete_like(img_no, user_no)
+        return self.image_dao.delete_like(user_no, img_no)
 
     def upload_image(self, upload_image, filename, user_no):
         filename = str(datetime.utcnow()) + filename
@@ -112,10 +111,13 @@ class ImageService:
 
 
     def delete_image(self, img_no):
-        # sql에서 img_no로  파일명을 받아옴,
-        self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='파일명')
-        self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='thum_' + '파일명')
-
-        # 성공 했을시
-        # sql에서 파일 번호 지움
-        return self.image_dao.delete_image(img_no)
+        filename = self.image_dao.delete_image(img_no)
+        try:
+            self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key=filename)
+            self.s3.delete_object(Bucket=self.config['S3_BUCKET'], Key='thum_' + filename)
+            return filename
+        except Exception as e:
+            # Error 발생할 경우
+            print(f"s3 안 파일 {filename} 삭제 실패 ")
+            print(e)
+            return filename
