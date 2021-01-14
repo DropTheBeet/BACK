@@ -1,5 +1,5 @@
 from sqlalchemy import and_, func, desc
-from model.models import Image, User, Rec_tag, Likes, Tag, R_image
+from model.models import Image, Rec_tag, Likes, R_image
 from model.util import query2list
 
 
@@ -29,7 +29,6 @@ class ImageDAO:
 
     # 태그들을 포함한 이미지 조회 : 사용자가 선택한 태그들을 포함하는 이미지를 조회
     def get_image_list_by_tags(self, tag_list, user_no=None):
-
         # SELECT img_no, tag_no FROM recognized_tag WHERE tag_no IN ( 선택한 태그들 ) GROUP BY img_no, tag_no ORDER BY img_no
         first_query = self.db.session.query(Rec_tag.img_no, Rec_tag.tag_no) \
             .filter(Rec_tag.tag_no.in_(tag_list)) \
@@ -75,14 +74,18 @@ class ImageDAO:
     # 추천 이미지 조회
     def get_recommend_image_list_by_user(self, user_no):
         try:
-            _r_imgs = R_image.query.filter_by(user_no=user_no).order_by(Image.reg_date.desc()).all()  # 사용자 번호에 해당하는 추천이미지 데이터 추출
+            first_query = self.db.session.query(R_image.img_no)\
+                .filter(R_image.user_no == user_no).subquery()        # 사용자 번호에 해당하는 추천이미지 데이터 추출
 
-            result = []
-            for i, img in enumerate(_r_imgs):
-                d = img.image.as_dict(['img_no', 'thum_url', 'reg_date'])
-                result.append(d)
-            return result       # 추출된 이미지 리스트로 변환하여 반환
-                                # [{'img_no' : img_no, 'thum_url' : thum_url, 'reg_date' : reg_date}, ..., ]
+            _r_imgs = self.db.session.query(Image)\
+                .select_from(first_query)\
+                .filter(Image.img_no.in_(first_query))\
+                .order_by(Image.reg_date.desc()).all()
+
+            # 추출된 이미지 리스트로 변환하여 반환
+            # [{'img_no' : img_no, 'thum_url' : thum_url, 'reg_date' : reg_date}, ..., ]
+            return [img.as_dict(['img_no', 'thum_url', 'reg_date']) for img in _r_imgs]
+
         except Exception as e:
             # Error 발생할 경우
             print("GET_RECOMMEND_IMAGE_LIST_BY_USER 실패 : user_no = {}".format(user_no))
@@ -93,14 +96,20 @@ class ImageDAO:
     # 사용자의 좋아요한 이미지 조회
     def get_like_image_list_by_user(self, user_no):
         try:
-            liked_imgs = Likes.query.filter_by(user_no=user_no).all()  # 사용자 번호에 해당하는 좋아요 데이터 추출
+            first_query = self.db.session.query(Likes.img_no) \
+                .filter(Likes.user_no == user_no).subquery()          # 사용자 번호에 해당하는 좋아요 데이터 추출
+
+            liked_imgs = self.db.session.query(Image)\
+                .select_from(first_query)\
+                .filter(Image.img_no.in_(first_query))\
+                .order_by(Image.reg_date.desc()).all()
         except Exception as e:
             # Error 발생할 경우
             print("GET_LIKE_IMAGE_LIST_BY_USER 실패 : user_no = {}".format(user_no))
             print(e)
             return False
 
-        return [img.images.as_dict(['img_no', 'thum_url', 'reg_date']) for img in
+        return [img.as_dict(['img_no', 'thum_url', 'reg_date']) for img in
                 liked_imgs]  # 추출된 좋아요 데이터에서 이미지를 참조하여 리스트로 반환(img_no, thum_url, reg_date 속성만)
 
     # 이미지 상세정보 조회
