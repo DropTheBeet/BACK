@@ -24,7 +24,7 @@ class UserDAO:
     # 사용자 정보 조회 : 로그인 시 사용자의 번호 및 비밀번호를 조회
     def get_user_no_and_password(self, user_id):
         try:
-            _user = User.query.filter_by(user_id=user_id)   # 사용자 번호에 해당하는 사용자 데이터 추출
+            _user = User.query.filter_by(user_id=user_id).first()  # 사용자 번호에 해당하는 사용자 데이터 추출
         except Exception as e:
             # Error 발생할 경우
             print("GET_USER_NO_AND_PASSWORD 실패 :", user_id)

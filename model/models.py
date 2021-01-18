@@ -1,7 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
+
 from sqlalchemy.dialects.mysql import DOUBLE
 
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 # SQLAlchemy 객체 생성
 db = SQLAlchemy()
@@ -34,12 +35,18 @@ class Click_data(db.Model):
     type = db.Column(db.String(1), nullable=False)                                  # 클릭 종류 : 문자열(1) ('S':검색, 'R':추천)
     click_date = db.Column(db.DateTime, nullable=False, default=datetime.now)       # 클릭 날짜 : DateTime, 기본값 : 현재 시간
 
+    def __init__(self, user_no, img_no, type):
+        self.user_no = user_no
+        self.img_no = img_no
+        self.type = type
+
     # 속성을 딕셔너리 형태로 반환
     def as_dict(self, select_cols=None):
         return {x.name: getattr(self, x.name) for x in self.__table__.columns if
                 (select_cols is None) or (x.name in select_cols)}
 
-# 이미지 번호
+
+# 이미지 테이블
 class Image(db.Model):
     __tablename__ = 'image'     # MySQL 테이블 이름
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}   # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
@@ -201,6 +208,7 @@ class Tag_pf(db.Model):
     def as_dict(self, select_cols=None):
         return {x.name: getattr(self, x.name) for x in self.__table__.columns if
                 (select_cols is None) or (x.name in select_cols)}
+
 
 # 사용자 테이블
 class User(db.Model):
