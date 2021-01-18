@@ -1,5 +1,5 @@
 from sqlalchemy import and_, func, desc
-from model.models import Image, Rec_tag, Likes, R_image
+from model.models import Image, Rec_tag, Likes, R_image, Click_data
 from model.util import query2list
 
 
@@ -277,6 +277,20 @@ class ImageDAO:
         except Exception as e:
             # Error 발생할 경우
             print("DELETE_LIKE 실패 : user_no = {}, img_no = {}".format(user_no, img_no))
+            print(e)
+            return False
+
+        return True
+
+    # 클릭 데이터 삽입 : 사용자가 이미지를 클릭했을 경우
+    def insert_click_data(self, user_no, img_no, type):     # 사용자 번호, 이미지 번호, 클릭 타입(추천('R'), 검색('S'))
+        c_data = Click_data(user_no, img_no, type)          # 클릭 데이터 생성
+        try:
+            self.db.session.add(c_data)     # INSERT
+            self.db.session.commit()        # COMMIT
+        except Exception as e:
+            # Error 발생할 경우
+            print("INSERT_CLICK_DATA 실패 : user_no = {}, img_no = {}, type = {}".format(user_no, img_no, type))
             print(e)
             return False
 
