@@ -83,38 +83,35 @@ def create_endpoints(app, services):
         else:
             return '', 401
 
-
-    @app.route('/home', methods=['GET'])
+    @app.route('/home', methods=['POST'])
     @login_required
     def get_home_image_by_user():
-        user_no = g.user_no
-        user_id = g.user_id
-        tag_list = tag_service.get_tag_list_by_user(user_no)
-        user_images = image_service.get_image_list_by_user(user_no)
-        if user_images:
-            return jsonify({
-                'img_info' : user_images,
-                'user_no' : user_no,
-                'user_id' : user_id,
-                'tag_list' : tag_list   #대분류,중분류,태그
-            })
-        else:
-            return '', 404
-
-    @app.route('/home/tags', methods=['POST'])
-    @login_required
-    def get_home_image_by_tags():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
-        user_no = g.user_no
-        user_tags_images = image_service.get_image_list_by_tags(tag_list, user_no=user_no)
-        if user_tags_images:
-            return jsonify({
-                'img_info': user_tags_images,
-                'user_no': user_no,
-                'tag_list': tag_list
-            })
+        if tag_list == list([]):
+            user_no = g.user_no
+            user_id = g.user_id
+            tag_list = tag_service.get_tag_list_by_user(user_no)
+            user_images = image_service.get_image_list_by_user(user_no)
+            if user_images:
+                return jsonify({
+                    'img_info': user_images,
+                    'user_no': user_no,
+                    'user_id': user_id,
+                    'tag_list': tag_list  # 대분류,중분류,태그
+                })
+            else:
+                return '', 404
         else:
-            return '', 404
+            user_no = g.user_no
+            user_tags_images = image_service.get_image_list_by_tags(tag_list, user_no=user_no)
+            if user_tags_images:
+                return jsonify({
+                    'img_info': user_tags_images,
+                    'user_no': user_no,
+                    'tag_list': tag_list
+                })
+            else:
+                return '', 404
 
     @app.route('/home/detail/<int:img_no>', methods=['GET'])
     @login_required
@@ -174,34 +171,30 @@ def create_endpoints(app, services):
        return '', 200
 
 
-    #여기서 부터 퍼블릭
-    @app.route('/public', methods=['GET'])
-    @login_required
-    def get_search_tags_public_recommend_image():
-        user_no = g.user_no
-        search_tag_list = tag_service.get_public_tag_list() #  검색용태그 리스트
-        recommended_image = image_service.get_recommend_image_list_by_user(user_no) ##유저기준 이미지 파일 추천 받음
-        if recommended_image:
-            return jsonify({
-                'img_info': recommended_image,
-                'user_no': user_no,
-                'search_tag_list': search_tag_list
-            })
-        else:
-            return '', 404
-
-
-    @app.route('/public/tags', methods=['POST'])
+    @app.route('/public', methods=['POST'])
     def get_public_image_by_tags():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
-        user_tags_images = image_service.get_image_list_by_tags(tag_list)
-        if user_tags_images:
-            return jsonify({
-                'img_info': user_tags_images,
-                'tag_list': tag_list
-            })
+        if tag_list == list([]):
+            user_no = g.user_no
+            search_tag_list = tag_service.get_public_tag_list()  # 검색용태그 리스트
+            recommended_image = image_service.get_recommend_image_list_by_user(user_no)  ##유저기준 이미지 파일 추천 받음
+            if recommended_image:
+                return jsonify({
+                    'img_info': recommended_image,
+                    'user_no': user_no,
+                    'search_tag_list': search_tag_list
+                })
+            else:
+                return '', 404
         else:
-            return '', 404
+            user_tags_images = image_service.get_image_list_by_tags(tag_list)
+            if user_tags_images:
+                return jsonify({
+                    'img_info': user_tags_images,
+                    'tag_list': tag_list
+                })
+            else:
+                return '', 404
 
 
     # like
