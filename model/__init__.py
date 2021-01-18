@@ -5,8 +5,6 @@ from .model_dao import ModelDAO
 from .util import query2list
 
 
-
-
 __all__ = [
     'UserDAO',
     'ImageDAO',
