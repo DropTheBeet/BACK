@@ -67,6 +67,9 @@ class ImageService:
     def delete_like(self, img_no, user_no):
         return self.image_dao.delete_like(user_no, img_no)
 
+    def insert_click_data(self, user_no, img_no, type):
+        return self.image_dao.insert_click_data(user_no, img_no, type)
+
     def upload_image(self, upload_image, filename, user_no):
         filename = str(datetime.utcnow()) + filename
         thumfilename = "thum_" + filename

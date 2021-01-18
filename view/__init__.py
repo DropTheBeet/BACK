@@ -97,7 +97,8 @@ def create_endpoints(app, services):
                     'img_info': user_images,
                     'user_no': user_no,
                     'user_id': user_id,
-                    'tag_list': tag_list  # 대분류,중분류,태그
+                    'tag_list': tag_list,  # 대분류,중분류,태그
+                    'type': 'S'
                 })
             else:
                 return '', 404
@@ -108,15 +109,21 @@ def create_endpoints(app, services):
                 return jsonify({
                     'img_info': user_tags_images,
                     'user_no': user_no,
-                    'tag_list': tag_list
+                    'tag_list': tag_list,
+                    'type': 'S'
                 })
             else:
                 return '', 404
 
-    @app.route('/home/detail/<int:img_no>', methods=['GET'])
+    # 유입 , 이미지 넘버 클릭에 대해, home > S(검색),   public > S(검색),  public > R(추천)
+
+    @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "S"}'
     @login_required
-    def get_image_detail(img_no):
+    def get_image_detail():
+        img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+        type = request.json['type']
         user_no = g.user_no
+        image_service.insert_click_data(user_no, img_no, type)
         like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
         original_image = image_service.get_image_detail(img_no, user_no)
         if original_image:
@@ -127,6 +134,7 @@ def create_endpoints(app, services):
             })
         else:
             return '', 404
+
 
 
     @app.route('/like/<int:img_no>', methods=['GET'])
@@ -182,7 +190,8 @@ def create_endpoints(app, services):
                 return jsonify({
                     'img_info': recommended_image,
                     'user_no': user_no,
-                    'search_tag_list': search_tag_list
+                    'search_tag_list': search_tag_list,
+                    'type': 'R'
                 })
             else:
                 return '', 404
@@ -191,7 +200,8 @@ def create_endpoints(app, services):
             if user_tags_images:
                 return jsonify({
                     'img_info': user_tags_images,
-                    'tag_list': tag_list
+                    'tag_list': tag_list,
+                    'type': 'S'
                 })
             else:
                 return '', 404
@@ -219,26 +229,6 @@ def create_endpoints(app, services):
             return '', 200
         else:
             return '', 404
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     #
     # @app.route('/profile-picture/<int:user_no>', methods=['GET'])
