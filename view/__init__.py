@@ -180,6 +180,7 @@ def create_endpoints(app, services):
 
 
     @app.route('/public', methods=['POST'])
+    @login_required
     def get_public_image_by_tags():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
         if tag_list == list([]):

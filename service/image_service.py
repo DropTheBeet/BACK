@@ -25,7 +25,7 @@ class ImageService:
 
 
     def insert_image(self, upload_image_info):
-        URL = 'http://cc8e1ccfb7d9.ngrok.io/recognized_tag'
+        URL = 'http://e0e81f87de7c.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
