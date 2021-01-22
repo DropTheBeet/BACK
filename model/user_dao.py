@@ -36,9 +36,6 @@ class UserDAO:
 
         return _user.as_dict()   # 추출된 데이터를 딕셔너리 형태로 반환
 
-
-
-
     #
     # def get_profile_picture(self, user_no):
     #     row = self.db.execute(text("""
