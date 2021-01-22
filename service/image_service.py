@@ -40,10 +40,10 @@ class ImageService:
             tag_info = {}
             tag_info['tag_no'] = int(list((tag.keys()))[0]) + 1
             tag_values = list(tag.values())
-            tag_info['point_x'] = tag_values[0][0]
-            tag_info['point_y'] = tag_values[0][1]
-            tag_info['width'] = tag_values[0][2]
-            tag_info['height'] = tag_values[0][3]
+            tag_info['x_1'] = tag_values[0][0]
+            tag_info['y_1'] = tag_values[0][1]
+            tag_info['x_2'] = tag_values[0][2]
+            tag_info['y_2'] = tag_values[0][3]
             upload_image_info['tag_data'].append(tag_info)
 
         print(upload_image_info['tag_data'])

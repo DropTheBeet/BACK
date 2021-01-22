@@ -1,6 +1,3 @@
-
-from sqlalchemy.dialects.mysql import DOUBLE
-
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
@@ -149,21 +146,21 @@ class Rec_tag(db.Model):
     no = db.Column(db.Integer, primary_key=True, autoincrement=True)                # 번호 : 정수형, 기본키, 자동증가
     img_no = db.Column(db.Integer, db.ForeignKey('image.img_no'), nullable=False)   # 이미지 번호 : 정수형, 외래키(이미지 테이블의 이미지 번호 참조)
     tag_no = db.Column(db.Integer, db.ForeignKey('tag.tag_no'), nullable=False)     # 태그 번호 : 정수형, 외래키(태그 테이블의 태그 번호 참조)
-    width = db.Column(db.Integer)                                                   # 인식된 태그 너비 : 정수형
-    height = db.Column(db.Integer)                                                  # 인식된 태그 높이 : 정수형
-    point_x = db.Column(db.Integer)                                                 # 인식된 태그 x 좌표 : 정수형
-    point_y = db.Column(db.Integer)                                                 # 인식된 태그 y 좌표 : 정수형
+    x_1 = db.Column(db.Integer)                                                 # 인식된 태그 x1 좌표 : 정수형
+    y_1 = db.Column(db.Integer)                                                 # 인식된 태그 y1 좌표 : 정수형
+    x_2 = db.Column(db.Integer)                                                 # 인식된 태그 x2 좌표 : 정수형
+    y_2 = db.Column(db.Integer)                                                 # 인식된 태그 y2 좌표 : 정수형
 
     image = db.relationship('Image', backref='rec_tags')        # 이미지 테이블과 관계 생성 (Image(클래스이름) 참조, backref : 이미지 테이블에서 참조하는 이름)
     tag = db.relationship('Tag', backref='rec_tags')            # 태그 테이블과 관계 생성 (Tag(클래스이름) 참조, backref : 태그 테이블에서 참조하는 이름)
 
-    def __init__(self, img_no, tag_no, width, height, point_x, point_y):
-        self.img_no=img_no
-        self.tag_no=tag_no
-        self.width=width
-        self.height=height
-        self.point_x=point_x
-        self.point_y=point_y
+    def __init__(self, img_no, tag_no, x_1, y_1, x_2, y_2):
+        self.img_no = img_no
+        self.tag_no = tag_no
+        self.x_1 = x_1
+        self.y_1 = y_1
+        self.x_2 = x_2
+        self.y_2 = y_2
 
     # 속성을 딕셔너리 형태로 반환
     def as_dict(self, select_cols=None):
