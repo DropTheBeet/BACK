@@ -24,14 +24,19 @@ class ImageService:
 
 
 
-    def insert_image(self, upload_image_info):
+    def insert_image(self, upload_image_info, upload_image):
         URL = 'http://a097263d7371.ngrok.io/recognized_tag'
-        headers = {
-            'Content-Type': 'application/json;'
-        }
-        data = {
-            'img_url': upload_image_info['img_url']}
-        res = requests.post(URL, data=json.dumps(data), headers=headers)
+        # headers = {
+        #     'Content-Type': 'application/json;'
+        # }
+        # data = {
+        #     'img_url': upload_image_info['img_url']}
+        # res = requests.post(URL, data=json.dumps(data), headers=headers)
+
+        #파일 업로드
+        files = {'upload_image': upload_image}
+        res = requests.post(URL, files=files)
+
         res.raise_for_status()
         tags_info = json.loads(res.text)
         upload_image_info['tag_data'] = []
@@ -77,38 +82,38 @@ class ImageService:
         original_image = Image.open(upload_image)
         # #이미지 사이즈 측정
         img_size = original_image.size
-        in_mem_file = io.BytesIO()
-        original_image.save(in_mem_file, format=original_image.format)
-        in_mem_file.seek(0)
-        self.s3.upload_fileobj(
-            in_mem_file,
-            self.config['S3_BUCKET'],
-            filename,
-            ExtraArgs={
-            "ContentType": 'image/jpeg'
-            }
-        )
+        # in_mem_file = io.BytesIO()
+        # original_image.save(in_mem_file, format=original_image.format)
+        # in_mem_file.seek(0)
+        # self.s3.upload_fileobj(
+        #     in_mem_file,
+        #     self.config['S3_BUCKET'],
+        #     filename,
+        #     ExtraArgs={
+        #     "ContentType": 'image/jpeg'
+        #     }
+        # )
 
-        thum_image = Image.open(upload_image)
-        thum_image.thumbnail((190, 190))
-        thum_in_mem_file = io.BytesIO()
-        thum_image.save(thum_in_mem_file, format=thum_image.format)
-        thum_in_mem_file.seek(0)
-        self.s3.upload_fileobj(
-            thum_in_mem_file,
-            self.config['S3_BUCKET'],
-            thumfilename,
-            ExtraArgs={
-                "ContentType": 'image/jpeg'
-            }
-        )
+        # thum_image = Image.open(upload_image)
+        # thum_image.thumbnail((190, 190))
+        # thum_in_mem_file = io.BytesIO()
+        # thum_image.save(thum_in_mem_file, format=thum_image.format)
+        # thum_in_mem_file.seek(0)
+        # self.s3.upload_fileobj(
+        #     thum_in_mem_file,
+        #     self.config['S3_BUCKET'],
+        #     thumfilename,
+        #     ExtraArgs={
+        #         "ContentType": 'image/jpeg'
+        #     }
+        # )
 
-        thum_url = f"{self.config['S3_BUCKET_URL']}{thumfilename}"
-        img_url = f"{self.config['S3_BUCKET_URL']}{filename}"
+        # thum_url = f"{self.config['S3_BUCKET_URL']}{thumfilename}"
+        # img_url = f"{self.config['S3_BUCKET_URL']}{filename}"
 
 
-        img = {'filename':filename, 'img_url':img_url, 'thum_url':thum_url, 'user_no':user_no, 'img_w':img_size[0], 'img_h':img_size[1]}
-
+        img = {'filename':filename, 'img_url':'', 'thum_url':'', 'user_no':user_no, 'img_w':img_size[0], 'img_h':img_size[1]}
+        # img = {'filename':filename, 'img_url':img_url, 'thum_url':thum_url, 'user_no':user_no, 'img_w':img_size[0], 'img_h':img_size[1]}
         return img
 
 

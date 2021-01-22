@@ -167,7 +167,7 @@ def create_endpoints(app, services):
         filename = secure_filename(upload_image.filename)
         upload_image_info = image_service.upload_image(upload_image, filename, user_no)
         # 비동기 처리하기
-        image_service.insert_image(upload_image_info)
+        image_service.insert_image(upload_image_info, upload_image)
         return '', 200
 
     @app.route('/home/delete/<int:img_no>', methods=['GET'])
