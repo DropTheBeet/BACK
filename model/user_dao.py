@@ -34,10 +34,7 @@ class UserDAO:
         if _user is None:   # 추출된 데이터가 없을 경우
             return None
 
-        return _user[0].as_dict()   # 추출된 데이터를 딕셔너리 형태로 반환
-
-
-
+        return _user.as_dict()   # 추출된 데이터를 딕셔너리 형태로 반환
 
     #
     # def get_profile_picture(self, user_no):

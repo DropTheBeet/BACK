@@ -194,10 +194,10 @@ class ImageDAO:
                 # 삽입할 인식된 태그 데이터 생성
                 rec_tag = Rec_tag(img_no,
                                   rt['tag_no'],
-                                  rt['width'],
-                                  rt['height'],
-                                  rt['point_x'],
-                                  rt['point_y'])
+                                  rt['x_1'],
+                                  rt['y_1'],
+                                  rt['x_2'],
+                                  rt['y_2'])
                 self.db.session.add(rec_tag)  # INSERT
             self.db.session.commit()  # COMMIT
         except Exception as e:
