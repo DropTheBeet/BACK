@@ -146,10 +146,10 @@ class Rec_tag(db.Model):
     no = db.Column(db.Integer, primary_key=True, autoincrement=True)                # 번호 : 정수형, 기본키, 자동증가
     img_no = db.Column(db.Integer, db.ForeignKey('image.img_no'), nullable=False)   # 이미지 번호 : 정수형, 외래키(이미지 테이블의 이미지 번호 참조)
     tag_no = db.Column(db.Integer, db.ForeignKey('tag.tag_no'), nullable=False)     # 태그 번호 : 정수형, 외래키(태그 테이블의 태그 번호 참조)
-    x_1 = db.Column(db.Integer)                                                 # 인식된 태그 x1 좌표 : 정수형
-    y_1 = db.Column(db.Integer)                                                 # 인식된 태그 y1 좌표 : 정수형
-    x_2 = db.Column(db.Integer)                                                 # 인식된 태그 x2 좌표 : 정수형
-    y_2 = db.Column(db.Integer)                                                 # 인식된 태그 y2 좌표 : 정수형
+    x_1 = db.Column(db.Float)                                                 # 인식된 태그 x1 좌표 : 정수형
+    y_1 = db.Column(db.Float)                                                 # 인식된 태그 y1 좌표 : 정수형
+    x_2 = db.Column(db.Float)                                                 # 인식된 태그 x2 좌표 : 정수형
+    y_2 = db.Column(db.Float)                                                 # 인식된 태그 y2 좌표 : 정수형
 
     image = db.relationship('Image', backref='rec_tags')        # 이미지 테이블과 관계 생성 (Image(클래스이름) 참조, backref : 이미지 테이블에서 참조하는 이름)
     tag = db.relationship('Tag', backref='rec_tags')            # 태그 테이블과 관계 생성 (Tag(클래스이름) 참조, backref : 태그 테이블에서 참조하는 이름)
@@ -234,25 +234,47 @@ class User(db.Model):
                 (select_cols is None) or (x.name in select_cols)}
 
 
+# 추천 모델 input 데이터 뷰
 class R_Input_DataSet(db.Model):
     __tablename__ = 'r_input_dataset'  # MySQL 테이블 이름
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}  # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
 
-    user_no = db.Column(db.Integer, db.ForeignKey('user.user_no'), primary_key=True)  # 분류 번호 : 정수형, 기본키, 자동 증가
-    tag_no = db.Column(db.Integer, db.ForeignKey('major.major_no'), primary_key=True)       # 대분류 번호 : 정수형, 외래키(대분류 테이블의 대분류 번호 참조), Not null
-    tag = db.Column(db.String, db.ForeignKey('tag.tag'))
-    u_cnt = db.Column(db.Integer)
-    l_cnt = db.Column(db.Integer)
-    s_cnt_d = db.Column(db.Integer)
-    s_cnt_w = db.Column(db.Integer)
-    s_cnt_m = db.Column(db.Integer)
-    r_cnt_d = db.Column(db.Integer)
-    r_cnt_w = db.Column(db.Integer)
-    r_cnt_m = db.Column(db.Integer)
-    major_no = db.Column(db.Integer, db.ForeignKey('major.major_no'))
-    middle_no = db.Column(db.Integer, db.ForeignKey('middle.middle_no'))  # 중분류 번호 : 정수형, 외래키(중분류 테이블의 대분류 번호 참조), Not null
-    c_major = db.Column(db.Integer, db.ForeignKey('major.c_major'))
-    c_middle = db.Column(db.Integer, db.ForeignKey('middle.c_middle'))
+    user_no = db.Column(db.Integer, db.ForeignKey('user.user_no'), primary_key=True)    # 분류 번호 : 정수형, 기본키, 자동 증가
+    tag_no = db.Column(db.Integer, db.ForeignKey('major.major_no'), primary_key=True)   # 대분류 번호 : 정수형, 외래키(대분류 테이블의 대분류 번호 참조), Not null
+    tag = db.Column(db.String, db.ForeignKey('tag.tag'))                                # 태그 이름(영어)
+    u_cnt = db.Column(db.Integer)                                                       # 업로드 빈도
+    l_cnt = db.Column(db.Integer)                                                       # 좋아요 빈도
+    s_cnt_d = db.Column(db.Integer)                                                     # 검색 클릭 빈도(일)
+    s_cnt_w = db.Column(db.Integer)                                                     # 검색 클릭 빈도(주)
+    s_cnt_m = db.Column(db.Integer)                                                     # 검색 클릭 빈도(월)
+    r_cnt_d = db.Column(db.Integer)                                                     # 추천 클릭 빈도(일)
+    r_cnt_w = db.Column(db.Integer)                                                     # 추천 클릭 빈도(주)
+    r_cnt_m = db.Column(db.Integer)                                                     # 추천 클릭 빈도(월)
+    major_no = db.Column(db.Integer, db.ForeignKey('major.major_no'))                   # 대분류 번호
+    middle_no = db.Column(db.Integer, db.ForeignKey('middle.middle_no'))                # 중분류 번호 : 정수형, 외래키(중분류 테이블의 대분류 번호 참조), Not null
+    c_major = db.Column(db.Integer, db.ForeignKey('major.c_major'))                     # 대분류 이름
+    c_middle = db.Column(db.Integer, db.ForeignKey('middle.c_middle'))                  # 중분류 이름
+
+    # 속성을 딕셔너리 형태로 반환
+    def as_dict(self, select_cols=None):
+        return {x.name: getattr(self, x.name) for x in self.__table__.columns if
+                (select_cols is None) or (x.name in select_cols)}
+
+
+# 인식된 태그 중요도 테이블
+class Rec_tag_importance(db.Model):
+    __tablename__ = 'rec_tag_importance'  # MySQL 테이블 이름
+    __table_args__ = {'mysql_collate': 'utf8_general_ci'}  # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
+
+    no = db.Column(db.Integer, primary_key=True, autoincrement=True)             # 번호
+    img_no = db.Column(db.Integer, db.ForeignKey('image.image_no'))             # 이미지 번호
+    tag_no = db.Column(db.Integer, db.ForeignKey('tag.tag_no'))                 # 태그 번호
+    importance = db.Column(db.Float)                                            # 인식된 태그 중요도
+
+    def __init__(self, img_no, tag_no, importance):
+        self.img_no = img_no
+        self.tag_no = tag_no
+        self.importance = importance
 
     # 속성을 딕셔너리 형태로 반환
     def as_dict(self, select_cols=None):
