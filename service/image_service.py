@@ -20,10 +20,6 @@ class ImageService:
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_detail(img_no, user_no)
 
-
-
-
-
     def insert_image(self, upload_image_info):
         URL = 'http://a097263d7371.ngrok.io/recognized_tag'
         headers = {
