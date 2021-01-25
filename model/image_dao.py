@@ -1,5 +1,5 @@
 from sqlalchemy import and_, func, desc
-from model.models import Image, Rec_tag, Likes, R_image, Click_data
+from model.models import Image, Rec_tag, Likes, R_image, Click_data, Rec_tag_importance
 from model.util import query2list
 
 
@@ -296,16 +296,20 @@ class ImageDAO:
 
         return True
 
-    def get_image_info(self, recommended_image_no_by_tensor):
-        recommended_images = self.db.execute(text("""
 
+    # 인식된 태그 중요도 삽입
+    def insert_rec_tag_importance(self, importance_data):   # { img_no : 이미지번호,
+                                                            #   importances : [{ tag_no : 태그 번호, importance : 중요도 }, ... ,]}
+        img_no = importance_data['img_no']
+        for data in importance_data['importances']:
+            try:
+                self.db.session.add(Rec_tag_importance(img_no, data['tag_no'], data['importance']))  # INSERT
+            except Exception as e:
+                # Error 발생할 경우
+                print("INSERT_REC_TAG_IMPORTANCE 실패 : img_no = {}, tag_no = {}, importance = {}".format(img_no, data['tag_no'], data['importance']))
+                print(e)
+                return False
 
-        """), {
-            'img_no': recommended_image_no_by_tensor
-        }).fetchall()
+        self.db.session.commit()  # COMMIT
 
-        return [{
-            'img_no': recommended_image['img_no'],
-            'thum_url': recommended_image['thum_url'],
-            'reg_date': recommended_image['reg_date'],
-        } for recommended_image in recommended_images]
+        return True
