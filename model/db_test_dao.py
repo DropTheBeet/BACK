@@ -17,7 +17,9 @@ class testDAO:
 
         rec_tags = []
         for rt in img.rec_tags:
-            rec_tags.append(rt.as_dict())
+            d = rt.as_dict()
+            d['tag'] = rt.tag.tag
+            rec_tags.append(d)
 
         img_data['reg_tags'] = rec_tags
 
@@ -31,7 +33,8 @@ class testDAO:
         #                   'x_1': x_1 좌표,
         #                   'y_1': y_1 좌표,
         #                   'x_2': x_2 좌표,
-        #                   'y_2': y_2 좌표}, ..., ]}
+        #                   'y_2': y_2 좌표,
+        #                   'tag': 태그 이름 }, ..., ]}
 
 
 
