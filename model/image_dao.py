@@ -185,7 +185,7 @@ class ImageDAO:
             print(e)
             return False
 
-        return True
+        return img_no
 
     # 인식된 태그 삽입 : 이미지 업로드 시 이미지의 인식된 태그 데이터 저장
     def insert_rec_tag(self, img_no, tag_data):
@@ -299,14 +299,14 @@ class ImageDAO:
 
     # 인식된 태그 중요도 삽입
     def insert_rec_tag_importance(self, importance_data):   # { img_no : 이미지번호,
-                                                            #   importances : [{ tag_no : 태그 번호, importance : 중요도 }, ... ,]}
+                                                            #   importances : [{ tag_no : 태그 번호, importance : 중요도, num : 갯수}, ... ,]}
         img_no = importance_data['img_no']
         for data in importance_data['importances']:
             try:
-                self.db.session.add(Rec_tag_importance(img_no, data['tag_no'], data['importance']))  # INSERT
+                self.db.session.add(Rec_tag_importance(img_no, data['tag_no'], data['importance'], data['num']))  # INSERT
             except Exception as e:
                 # Error 발생할 경우
-                print("INSERT_REC_TAG_IMPORTANCE 실패 : img_no = {}, tag_no = {}, importance = {}".format(img_no, data['tag_no'], data['importance']))
+                print("INSERT_REC_TAG_IMPORTANCE 실패 : img_no = {}, tag_no = {}, importance = {}, num = {}".format(img_no, data['tag_no'], data['importance'], data['num']))
                 print(e)
                 return False
 
