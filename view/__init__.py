@@ -53,7 +53,7 @@ def create_endpoints(app, services):
     model_service = services.model_service
 
     @app.route("/ping", methods=['GET'])
-    def pin():
+    def ping():
 
         return "pongg"
 
@@ -234,7 +234,7 @@ def create_endpoints(app, services):
 
     @app.route('/test_tag_preference/<int:img_no>', methods=['GET'])
     def test_tag_preference(img_no):
-        # 이미지 번호에 해당되는 tag정보들 받아오기
+
         # 받은 태그정보로 tag importance 전략별로 계산 ,tag-importance-percentage 받아오기
         # 형식은  { 이미지 번호, 태그영문 : 점유율 }
         # print 후  jason 형태로  보내기

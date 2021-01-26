@@ -4,14 +4,10 @@ import boto3
 from flask import Flask
 from flask_cors import CORS
 
-from model import UserDAO, TagDAO, ImageDAO, ModelDAO
+from model import UserDAO, TagDAO, ImageDAO, ModelDAO, testDAO
 from model.models import db
 from service import UserService, ImageService, TagService, ModelService
 from view import create_endpoints
-
-
-import time
-import threading
 
 
 
@@ -46,6 +42,8 @@ def create_app(test_config=None):
     tag_dao = TagDAO(db)
     image_dao = ImageDAO(db)
     model_dao = ModelDAO(db)
+    test_dao = testDAO(db)
+
 
     print("APP실행중")
 
@@ -67,7 +65,7 @@ def create_app(test_config=None):
     services = Services
     services.user_service = UserService(user_dao, app.config)
     services.tag_service = TagService(tag_dao)
-    services.image_service = ImageService(image_dao, app.config, s3_client)
+    services.image_service = ImageService(image_dao, app.config, s3_client, test_dao)
     services.model_service = ModelService(model_dao)
 
 

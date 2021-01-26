@@ -2,14 +2,16 @@ from PIL import Image
 import requests, json
 import io
 from datetime import datetime
-
+import math
+import pandas as pd
 
 
 class ImageService:
-    def __init__(self, image_dao, config, s3_client):
+    def __init__(self, image_dao, config, s3_client, test_dao):
         self.image_dao = image_dao
         self.config = config
         self.s3 = s3_client
+        self.test_dao = test_dao
 
     def get_image_list_by_user(self, user_no):
         return self.image_dao.get_image_list_by_user(user_no)
@@ -21,7 +23,7 @@ class ImageService:
         return self.image_dao.get_image_detail(img_no, user_no)
 
     def insert_image(self, upload_image_info):
-        URL = 'http://a097263d7371.ngrok.io/recognized_tag'
+        URL = 'http://39228f543fce.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -48,11 +50,76 @@ class ImageService:
     def get_recommend_image_list_by_user(self, user_no):
         return self.image_dao.get_recommend_image_list_by_user(user_no)
 
+
+    def get_tag_importance_test(self, rec_tags_info):
+        def tag_area(x_1, x_2, y_1, y_2, num):
+            if num == 1:
+                return abs((x_2 - x_1) * (y_2 - y_1))
+            if num == 2:
+                return math.sqrt(abs((x_2 - x_1) * (y_2 - y_1)))
+            if num == 3:
+                return math.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
+
+        def tag_location(x_1, x_2, y_1, y_2):
+            return 1/(math.sqrt((0.5 - ((x_1 + x_2) / 2)) ** 2 + (0.5 - ((y_1 + y_2) / 2)) ** 2)*100)
+        tag_nos = [ tag_info['tag_no'] for tag_info in rec_tags_info]
+        print(tag_nos)
+        tag_no_set = set(tag_nos)
+        print(tag_no_set)
+        tag_num_dict = {}
+        for tag_no in tag_no_set:
+            num = tag_nos.count(tag_no)
+            tag_num_dict[tag_no] = num
+        print(tag_num_dict)
+        # {48: 5, 50: 5, 47: 3}
+        dupli_tags_process = {}
+
+        for tag_no, num in tag_num_dict.items():
+            dupli_tags_process[tag_no] = [0, 0, 0, 0, 0, 0, "no_name"]
+        for tag_no, num in tag_num_dict.items():
+            for tag_info in rec_tags_info:
+                if tag_info['tag_no'] == tag_no:
+                    x_1 = tag_info['x_1']
+                    x_2 = tag_info['x_2']
+                    y_1 = tag_info['y_1']
+                    y_2 = tag_info['y_2']
+                    dupli_tags_process[tag_no][0] += 0.88*tag_area(x_1,x_2,y_1,y_2,1)
+                    dupli_tags_process[tag_no][0] += 0.12*tag_location(x_1,x_2,y_1,y_2)/num
+                    dupli_tags_process[tag_no][1] += 0.88*tag_area(x_1,x_2,y_1,y_2,2)
+                    dupli_tags_process[tag_no][1] += 0.12*tag_location(x_1,x_2,y_1,y_2)/num
+                    dupli_tags_process[tag_no][2] += 0.88*tag_area(x_1, x_2, y_1, y_2, 3)
+                    dupli_tags_process[tag_no][2] += 0.12*tag_location(x_1,x_2,y_1,y_2)/num
+                    dupli_tags_process[tag_no][3] += tag_area(x_1,x_2,y_1,y_2,1)
+                    dupli_tags_process[tag_no][4] += tag_area(x_1,x_2,y_1,y_2,2)
+                    dupli_tags_process[tag_no][5] += tag_area(x_1, x_2, y_1, y_2, 3)
+                    dupli_tags_process[tag_no][6] = tag_info['tag']
+        return dupli_tags_process
+
+    def get_importance_percentage(self, tags_importance):
+        # tags_importance.values():[1,2,3,4,5,6,name]
+        # 바나나 [1,2,3,4,5,6,name], 오렌지 [1,2,3,4,5,6,name]
+        # 최종 결과값, stratege1,  바나나:34%, 오렌지 :34% ...
+        k = tags_importance.values()
+        df = pd.DataFrame(k)
+        df = df.transpose()
+        dt2 = df.rename(columns=df.iloc[6])
+        dt3 = dt2.drop(dt2.index[6])
+        dt3['sum'] = dt3.sum(axis=1)
+        columns = list(dt3.columns)
+
+        dt4 = pd.DataFrame()
+        for column in columns:
+            dt4[column] = dt3[column]/dt3['sum']
+
+        print(dt4)
+
+        return
+
+    def get_image_tags_rec_info(self, img_no):
+        return self.test_dao.get_image_data(img_no)
+
     def get_like_image_by_user(self, user_no):
         return self.image_dao.get_like_image_list_by_user(user_no)
-
-    def get_image_info(self, img_no):  # 텐서 서버에서 받은 이미지에  정보에 추가 정보를 가져옴
-        return self.image_dao.get_image_info(img_no)
 
     def like_or_unlike_by_user_img(self, img_no, user_no):
         return self.image_dao.like_or_unlike_by_user_img(img_no, user_no)
@@ -106,6 +173,8 @@ class ImageService:
         img = {'filename':filename, 'img_url':img_url, 'thum_url':thum_url, 'user_no':user_no, 'img_w':img_size[0], 'img_h':img_size[1]}
 
         return img
+
+
 
 
 
