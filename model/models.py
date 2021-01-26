@@ -270,11 +270,13 @@ class Rec_tag_importance(db.Model):
     img_no = db.Column(db.Integer, db.ForeignKey('image.image_no'))             # 이미지 번호
     tag_no = db.Column(db.Integer, db.ForeignKey('tag.tag_no'))                 # 태그 번호
     importance = db.Column(db.Float)                                            # 인식된 태그 중요도
+    num = db.Column(db.Integer)                                                 # 인식된 태그 갯수
 
-    def __init__(self, img_no, tag_no, importance):
+    def __init__(self, img_no, tag_no, importance, num):
         self.img_no = img_no
         self.tag_no = tag_no
         self.importance = importance
+        self.num = num
 
     # 속성을 딕셔너리 형태로 반환
     def as_dict(self, select_cols=None):
