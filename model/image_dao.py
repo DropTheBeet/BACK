@@ -122,13 +122,11 @@ class ImageDAO:
             print(e)
             return False
 
-        if _image.liked:
-            _likes = [l.img_no for l in _image.liked if
-                      l.user_no == user_no]  # 추출된 이미지 데이터에서 좋아요를 참조하여 사용자 번호와 일치하는 경우를 리스트로 만듬
+        _likes = [l.img_no for l in _image.liked if
+                  l.user_no == user_no]  # 추출된 이미지 데이터에서 좋아요를 참조하여 사용자 번호와 일치하는 경우를 리스트로 만듬
 
-            like = True if len(_likes) > 0 else False  # _likes의 요소 개수가 0 이상일 경우 좋아요 여부 True
-        else:
-            like = False
+        like = True if len(_likes) > 0 else False  # _likes의 요소 개수가 0 이상일 경우 좋아요 여부 True
+
 
         try:
             # 이미지 작성자의 썸네일 추출 ( 작성자의 최신 업로드 이미지 )
