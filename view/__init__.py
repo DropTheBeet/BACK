@@ -120,20 +120,34 @@ def create_endpoints(app, services):
     @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "S"}'
     @login_required
     def get_image_detail():
-        img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
-        type = request.json['type']
-        user_no = g.user_no
-        image_service.insert_click_data(user_no, img_no, type)
-        like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
-        original_image = image_service.get_image_detail(img_no, user_no)
-        if original_image:
-            return jsonify({
-                'img_info': original_image,
-                'user_no': user_no,
-                'like_or_unlike': like_or_unlike
-            })
+        if 'type' in request.json:
+            img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            type = request.json['type']
+            user_no = g.user_no
+            image_service.insert_click_data(user_no, img_no, type)
+            like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
+            original_image = image_service.get_image_detail(img_no, user_no)
+            if original_image:
+                return jsonify({
+                    'img_info': original_image,
+                    'user_no': user_no,
+                    'like_or_unlike': like_or_unlike
+                })
+            else:
+                return '', 404
         else:
-            return '', 404
+            img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            user_no = g.user_no
+            like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
+            original_image = image_service.get_image_detail(img_no, user_no)
+            if original_image:
+                return jsonify({
+                    'img_info': original_image,
+                    'user_no': user_no,
+                    'like_or_unlike': like_or_unlike
+                })
+            else:
+                return '', 404
 
 
 
@@ -167,7 +181,12 @@ def create_endpoints(app, services):
         filename = secure_filename(upload_image.filename)
         upload_image_info = image_service.upload_image(upload_image, filename, user_no)
         # 비동기 처리하기
-        image_service.insert_image(upload_image_info)
+        img_no = image_service.insert_image(upload_image_info)
+        rec_tags_info = image_service.get_image_tags_rec_info(img_no)
+        score_data = image_service.get_tag_importance_test(rec_tags_info)
+        importance_data = image_service.get_importance_percentage(score_data)
+        image_service.insert_rec_tag_importance(img_no, importance_data)
+
         return '', 200
 
     @app.route('/home/delete/<int:img_no>', methods=['GET'])
@@ -231,15 +250,6 @@ def create_endpoints(app, services):
             return '', 200
         else:
             return '', 404
-
-    @app.route('/test_tag_preference/<int:img_no>', methods=['GET'])
-    def test_tag_preference(img_no):
-
-        # 받은 태그정보로 tag importance 전략별로 계산 ,tag-importance-percentage 받아오기
-        # 형식은  { 이미지 번호, 태그영문 : 점유율 }
-        # print 후  jason 형태로  보내기
-        return ''
-
 
     #
     # @app.route('/profile-picture/<int:user_no>', methods=['GET'])

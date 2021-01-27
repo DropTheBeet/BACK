@@ -22,8 +22,16 @@ class ImageService:
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_detail(img_no, user_no)
 
+    def insert_rec_tag_importance(self, img_no, importance_data):
+        total_data = {}
+        total_data["img_no"] = img_no
+        total_data["importances"] = importance_data
+        print(total_data)
+
+        return self.image_dao.insert_rec_tag_importance(total_data)
+
     def insert_image(self, upload_image_info):
-        URL = 'http://39228f543fce.ngrok.io/recognized_tag'
+        URL = 'http://911178133743.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -52,20 +60,13 @@ class ImageService:
 
 
     def get_tag_importance_test(self, rec_tags_info):
-        def tag_area(x_1, x_2, y_1, y_2, num):
-            if num == 1:
-                return abs((x_2 - x_1) * (y_2 - y_1))
-            if num == 2:
-                return math.sqrt(abs((x_2 - x_1) * (y_2 - y_1)))
-            if num == 3:
-                return math.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
-
+        def tag_area(x_1, x_2, y_1, y_2):
+            return abs((x_2 - x_1) * (y_2 - y_1))
         def tag_location(x_1, x_2, y_1, y_2):
             return 1/(math.sqrt((0.5 - ((x_1 + x_2) / 2)) ** 2 + (0.5 - ((y_1 + y_2) / 2)) ** 2)*100)
-        tag_nos = [ tag_info['tag_no'] for tag_info in rec_tags_info]
-        print(tag_nos)
+        rec_tags_info = rec_tags_info['reg_tags']
+        tag_nos = [tag_info['tag_no'] for tag_info in rec_tags_info]
         tag_no_set = set(tag_nos)
-        print(tag_no_set)
         tag_num_dict = {}
         for tag_no in tag_no_set:
             num = tag_nos.count(tag_no)
@@ -75,7 +76,7 @@ class ImageService:
         dupli_tags_process = {}
 
         for tag_no, num in tag_num_dict.items():
-            dupli_tags_process[tag_no] = [0, 0, 0, 0, 0, 0, "no_name"]
+            dupli_tags_process[tag_no] = [0, num]
         for tag_no, num in tag_num_dict.items():
             for tag_info in rec_tags_info:
                 if tag_info['tag_no'] == tag_no:
@@ -83,37 +84,30 @@ class ImageService:
                     x_2 = tag_info['x_2']
                     y_1 = tag_info['y_1']
                     y_2 = tag_info['y_2']
-                    dupli_tags_process[tag_no][0] += 0.88*tag_area(x_1,x_2,y_1,y_2,1)
+                    dupli_tags_process[tag_no][0] += 0.88*tag_area(x_1,x_2,y_1,y_2)
                     dupli_tags_process[tag_no][0] += 0.12*tag_location(x_1,x_2,y_1,y_2)/num
-                    dupli_tags_process[tag_no][1] += 0.88*tag_area(x_1,x_2,y_1,y_2,2)
-                    dupli_tags_process[tag_no][1] += 0.12*tag_location(x_1,x_2,y_1,y_2)/num
-                    dupli_tags_process[tag_no][2] += 0.88*tag_area(x_1, x_2, y_1, y_2, 3)
-                    dupli_tags_process[tag_no][2] += 0.12*tag_location(x_1,x_2,y_1,y_2)/num
-                    dupli_tags_process[tag_no][3] += tag_area(x_1,x_2,y_1,y_2,1)
-                    dupli_tags_process[tag_no][4] += tag_area(x_1,x_2,y_1,y_2,2)
-                    dupli_tags_process[tag_no][5] += tag_area(x_1, x_2, y_1, y_2, 3)
-                    dupli_tags_process[tag_no][6] = tag_info['tag']
+        print(dupli_tags_process)
         return dupli_tags_process
+    # {"tag_no":[score, num]}
 
-    def get_importance_percentage(self, tags_importance):
-        # tags_importance.values():[1,2,3,4,5,6,name]
-        # 바나나 [1,2,3,4,5,6,name], 오렌지 [1,2,3,4,5,6,name]
-        # 최종 결과값, stratege1,  바나나:34%, 오렌지 :34% ...
-        k = tags_importance.values()
-        df = pd.DataFrame(k)
-        df = df.transpose()
-        dt2 = df.rename(columns=df.iloc[6])
-        dt3 = dt2.drop(dt2.index[6])
-        dt3['sum'] = dt3.sum(axis=1)
-        columns = list(dt3.columns)
+    def get_importance_percentage(self, score_data):
+        # {img_no: 이미지번호,  importances : [{ tag_no : 태그 번호, importance : 중요도, num : 갯수}]
+        # tag_no: [score, num]
+        #  최종 결과값
+        #  score들의 합을 구하자
+        ## tag별 score값들의 리스트 구하기
+        score_list = [info[0] for info in list(score_data.values())]
+        score_sum = sum(score_list)
+        importances = []
+        for tag_no, score_info in score_data.items():
+            each_tag_info = {}
+            each_tag_info["tag_no"] = tag_no
+            each_tag_info["importance"] = score_info[0]/score_sum
+            each_tag_info["num"] = score_info[1]
+            importances.append(each_tag_info)
 
-        dt4 = pd.DataFrame()
-        for column in columns:
-            dt4[column] = dt3[column]/dt3['sum']
-
-        print(dt4)
-
-        return
+        print(importances)
+        return importances
 
     def get_image_tags_rec_info(self, img_no):
         return self.test_dao.get_image_data(img_no)
