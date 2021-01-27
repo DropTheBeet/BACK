@@ -267,7 +267,7 @@ class Rec_tag_importance(db.Model):
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}  # utf8 인코딩을 위한 속성 ( 한글 데이터 입력을 위함 )
 
     no = db.Column(db.Integer, primary_key=True, autoincrement=True)             # 번호
-    img_no = db.Column(db.Integer, db.ForeignKey('image.image_no'))             # 이미지 번호
+    img_no = db.Column(db.Integer, db.ForeignKey('image.img_no'))               # 이미지 번호
     tag_no = db.Column(db.Integer, db.ForeignKey('tag.tag_no'))                 # 태그 번호
     importance = db.Column(db.Float)                                            # 인식된 태그 중요도
     num = db.Column(db.Integer)                                                 # 인식된 태그 갯수
