@@ -36,5 +36,11 @@ class testDAO:
         #                   'y_2': y_2 좌표,
         #                   'tag': 태그 이름 }, ..., ]}
 
+    # 모든 이미지 번호 조회
+    def get_img_no_by_all(self):
+        img_no_list = self.db.session.query(Image.img_no).all()
+
+        return img_no_list          # [ (img_no, ), ... , ] 리스트안에 튜플 형식
+
 
 
