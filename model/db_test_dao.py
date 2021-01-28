@@ -8,7 +8,7 @@ class testDAO:
         self.db = database
 
     # 이미지 번호에 해당하는 이미지 데이터 조회
-    def get_image_data(self, img_no):
+    def get_image_data(self, img_no, except_tags):          # 이미지 번호, 제외할 태그 리스트
         img = Image.query.filter_by(img_no=img_no).first()
 
         img_data = img.as_dict(['img_no', 'user_no', 'filename'])
@@ -17,6 +17,8 @@ class testDAO:
 
         rec_tags = []
         for rt in img.rec_tags:
+            if rt.tag.tag in except_tags:           # 제외할 태그 리스트에 포함 될 경우
+                continue                            # 제외
             d = rt.as_dict()
             d['tag'] = rt.tag.tag
             rec_tags.append(d)
