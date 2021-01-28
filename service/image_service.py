@@ -3,7 +3,6 @@ import requests, json
 import io
 from datetime import datetime
 import math
-import pandas as pd
 
 
 class ImageService:
@@ -63,7 +62,11 @@ class ImageService:
         def tag_area(x_1, x_2, y_1, y_2):
             return abs((x_2 - x_1) * (y_2 - y_1))
         def tag_location(x_1, x_2, y_1, y_2):
-            return 1/(math.sqrt((0.5 - ((x_1 + x_2) / 2)) ** 2 + (0.5 - ((y_1 + y_2) / 2)) ** 2)*100)
+            location_score = math.sqrt((0.5 - ((x_1 + x_2) / 2))**2 + (0.5 - ((y_1 + y_2) / 2))**2)*100
+            if location_score == 0:
+                location_score += 0.1
+            return 1/location_score
+
         rec_tags_info = rec_tags_info['reg_tags']
         tag_nos = [tag_info['tag_no'] for tag_info in rec_tags_info]
         tag_no_set = set(tag_nos)
@@ -183,3 +186,6 @@ class ImageService:
             print(f"s3 안 파일 {filename} 삭제 실패 ")
             print(e)
             return filename
+
+    def get_img_no(self):
+        return self.test_dao.get_img_no_by_all()

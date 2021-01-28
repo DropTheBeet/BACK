@@ -251,6 +251,19 @@ def create_endpoints(app, services):
         else:
             return '', 404
 
+
+    @app.route('/test_rec_tag', methods=['GET'])
+    def test_rec_tag():
+        img_no_list = image_service.get_img_no()
+        for img_no in img_no_list:
+            rec_tags_info = image_service.get_image_tags_rec_info(img_no[0])
+            score_data = image_service.get_tag_importance_test(rec_tags_info)
+            importance_data = image_service.get_importance_percentage(score_data)
+            image_service.insert_rec_tag_importance(img_no[0], importance_data)
+
+        return '', 200
+
+
     #
     # @app.route('/profile-picture/<int:user_no>', methods=['GET'])
     # def get_profile_picture(user_no):
