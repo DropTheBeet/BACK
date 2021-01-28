@@ -8,5 +8,5 @@ __all__ = [
     'UserService',
     'ImageService',
     'TagService',
-    'ModelService'
+    'ModelService',
 ]
