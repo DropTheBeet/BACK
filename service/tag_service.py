@@ -11,3 +11,8 @@ class TagService:
 
     def get_public_tag_list(self):
         return self.tag_dao.get_tag_list_all()
+
+    def attach_active_false(self, tag_list):
+        for tag_info in tag_list:
+            tag_info['active'] = 'false'
+        return tag_list

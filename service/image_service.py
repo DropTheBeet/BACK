@@ -30,7 +30,7 @@ class ImageService:
         return self.image_dao.insert_rec_tag_importance(total_data)
 
     def insert_image(self, upload_image_info):
-        URL = 'http://911178133743.ngrok.io/recognized_tag'
+        URL = 'http://f071cab57df2.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -113,7 +113,7 @@ class ImageService:
         return importances
 
     def get_image_tags_rec_info(self, img_no):
-        return self.test_dao.get_image_data(img_no)
+        return self.test_dao.get_image_data(img_no, ['person', 'dining table', 'chair'])
 
     def get_like_image_by_user(self, user_no):
         return self.image_dao.get_like_image_list_by_user(user_no)
