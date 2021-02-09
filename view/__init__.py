@@ -135,11 +135,9 @@ def create_endpoints(app, services):
     @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "S"}'
     @login_required
     def get_image_detail():
-        if 'type' in request.json:
+        if request.json['type'] == {}:
             img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
-            type = request.json['type']
             user_no = g.user_no
-            image_service.insert_click_data(user_no, img_no, type)
             like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
             original_image = image_service.get_image_detail(img_no, user_no)
             if original_image:
@@ -152,7 +150,9 @@ def create_endpoints(app, services):
                 return '', 404
         else:
             img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            type = request.json['type']
             user_no = g.user_no
+            image_service.insert_click_data(user_no, img_no, type)
             like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
             original_image = image_service.get_image_detail(img_no, user_no)
             if original_image:
