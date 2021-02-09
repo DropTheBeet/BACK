@@ -16,7 +16,7 @@ class ModelDAO:
     def __init__(self, database):
         self.db = database
 
-    def set_model(self, exc_tags=None):     # exc_tags : 모델에 반영할 데이터 중 제외할 태그 리스트
+    def set_input_data(self, exc_tags=None):     # exc_tags : 모델에 반영할 데이터 중 제외할 태그 리스트
         input_user_data = R_Input_DataSet.query.all()  # 사용자별 선호도 계산에 반영될 데이터
         tag_data = Tag.query.all()  # 태그 데이터
         rec_tag_data = Image.query.all()  # 이미지별 인식된 태그를 추출하기 위한 이미지 데이터
@@ -30,6 +30,7 @@ class ModelDAO:
         self.set_tag_data(tag_data)  # 태그 데이터 세팅
         self.set_recognized_tag_data(rec_tag_data, exc_tags)  # 이미지별 인식된 태그 데이터 세팅
 
+    def set_model(self):
         prefer_df = self.get_preferences_to_df()            # 선호도 데이터 계산
         self.rec_model = RecModel(self.user_df, prefer_df)  # 추천 모델 세팅
 
@@ -82,15 +83,19 @@ class ModelDAO:
         self.tag_df =tags
 
     def set_recognized_tag_data(self, input_data, exc_tags=None):
-        df = pd.DataFrame(columns=['image_no', 'user_no', 'tag_no'])
+        df = pd.DataFrame(columns=['image_no', 'user_no', 'tag_no', 'importance'])
 
         i = 0
         for data in tqdm(input_data, desc="set_recognized_tag_data"):
-            for rec_tag in data.rec_tags:
-                if (exc_tags is not None) and (rec_tag.tag_no in exc_tags):
+            for rti in data.rec_tag_imp:
+                if (exc_tags is not None) and (rti.tag_no in exc_tags):
                     continue
-                df.loc[i] = [data.img_no, data.user_no, rec_tag.tag_no]
+                df.loc[i] = [data.img_no, data.user_no, rti.tag_no, rti.importance]
                 i = i + 1
+
+        # object형 데이터 int로 변환해주기
+        df[['user_no', 'tag_no', 'image_no']] = df[['user_no', 'tag_no', 'image_no']].apply(pd.to_numeric, errors="ignore")
+        df = df.astype({'user_no': 'int', 'tag_no': 'int', 'image_no': 'int'})
 
         self.rectag_df = df
 
@@ -119,7 +124,7 @@ class ModelDAO:
     def get_new_preferences(self):
         w = self.weights        # 가중치
 
-        df = self.user_df       # 선호도 계산을 위한 사용자 데이터
+        df = self.user_df  # 선호도 계산을 위한 사용자 데이터
         df[[*w.keys()]] *= pd.Series(w)  # Series 형태로 변환하여 각각의 행에 곱해주는 작업
 
         # 각각의 값 더하여 선호도 컬럼 새로 만들어주기
@@ -149,7 +154,9 @@ class ModelDAO:
         for i, pf in enumerate(tqdm(preferences, desc="get_preferences_to_df")):
             prefer_df.loc[i] = [pf.user_no, pf.tag_no, pf.preference]
 
-        prefer_df2 = prefer_df.astype({'user_no':'int', 'tag_no':'int'})
+        prefer_df2 = prefer_df.astype({'user_no': 'int', 'tag_no': 'int'})
+        prefer_df2[['user_no', 'tag_no']].apply(pd.to_numeric, errors="ignore")
+
 
         return prefer_df2
 
