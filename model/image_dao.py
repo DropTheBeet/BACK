@@ -28,43 +28,46 @@ class ImageDAO:
         return result
 
     # 태그들을 포함한 이미지 조회 : 사용자가 선택한 태그들을 포함하는 이미지를 조회
-    def get_image_list_by_tags(self, tag_list, user_no=None):
-        # SELECT img_no, tag_no FROM recognized_tag WHERE tag_no IN ( 선택한 태그들 ) GROUP BY img_no, tag_no ORDER BY img_no
-        first_query = self.db.session.query(Rec_tag.img_no, Rec_tag.tag_no) \
-            .filter(Rec_tag.tag_no.in_(tag_list)) \
-            .group_by(Rec_tag.img_no, Rec_tag.tag_no) \
-            .order_by(Rec_tag.img_no).subquery()
+    def get_image_list_by_tags(self, tag_list, user_no=None, type=None):
+        if user_no:
+            if type == "L":    # 사용자가 좋아요한 이미지 중에서 조회할 경우
+                first_query = self.db.session.query(Likes.img_no) \
+                    .filter(Likes.user_no==user_no).subquery()
+            else:       # 사용자가 업로드한 이미지 중에서 조회할 경우
+                # SELECT img_no FROM image WHERE user_no = 유저 번호
+                first_query = self.db.session.query(Image.img_no)\
+                            .filter(Image.user_no == user_no)\
+                            .order_by(Image.reg_date.desc()).subquery()
 
-        # SELECT img_no FROM first_query GROUP BY img_no HAVING count(tag_no) = (선택한 태그의 갯수)
-        second_query = self.db.session.query(first_query.c.img_no) \
-            .select_from(first_query) \
-            .group_by(first_query.c.img_no) \
-            .having(func.count(first_query.c.tag_no) == len(tag_list)).subquery()
+            # SELECT img_no, tag_no FROM recognized_tag WHERE img_no IN ( first_query ) and tag_no IN ( 선택한 태그들 ) GROUP BY img_no, tag_no ORDER BY img_no
+            second_query = self.db.session.query(Rec_tag.img_no, Rec_tag.tag_no) \
+                .filter(and_(Rec_tag.img_no.in_(first_query), Rec_tag.tag_no.in_(tag_list))) \
+                .group_by(Rec_tag.img_no, Rec_tag.tag_no) \
+                .order_by(Rec_tag.img_no).subquery()
+        else:       # 전체 이미지 중에서 조회할 경우
+            # SELECT img_no, tag_no FROM recognized_tag WHERE img_no IN ( first_query ) and tag_no IN ( 선택한 태그들 ) GROUP BY img_no, tag_no ORDER BY img_no
+            second_query = self.db.session.query(Rec_tag.img_no, Rec_tag.tag_no) \
+                .filter(Rec_tag.tag_no.in_(tag_list)) \
+                .group_by(Rec_tag.img_no, Rec_tag.tag_no) \
+                .order_by(Rec_tag.img_no).subquery()
+
+        # SELECT img_no FROM second_query GROUP BY img_no HAVING count(tag_no) = (선택한 태그의 갯수)
+        third_query = self.db.session.query(second_query.c.img_no) \
+            .select_from(second_query) \
+            .group_by(second_query.c.img_no) \
+            .having(func.count(second_query.c.tag_no) == len(tag_list)).subquery()
         try:
-            if user_no:  # 사용자가 업로드한 이미지 중에서 조회할 경우
-                # SELECT * FROM image WHERE img_no IN ( second_query ) AND user_no = ( 사용자 번호 )
-                final_query = self.db.session.query(Image) \
-                    .filter(and_(Image.img_no.in_(second_query), Image.user_no == user_no))\
-                    .order_by(Image.reg_date.desc())
+            # SELECT * FROM image WHERE img_no IN ( third_query )
+            final_query = self.db.session.query(Image) \
+                .filter(Image.img_no.in_(third_query))\
+                .order_by(Image.reg_date.desc())
 
-                _images = final_query.all()
+            _images = final_query.all()
 
-                result = query2list(_images, ['img_no', 'thum_url',
-                                              'reg_date'])  # 추출된 이미지 데이터를 리스트로 변환(img_no, thum_url, reg_date 속성만)
+            # 추출된 이미지 데이터를 리스트로 변환(img_no, thum_url, reg_date 속성만)
+            result = query2list(_images, ['img_no', 'thum_url', 'reg_date'])
 
-                return result
-            else:  # 전체 이미지 중에서 조회할 경우
-                # SELECT * FROM image WHERE img_no IN ( second_query )
-                final_query = self.db.session.query(Image) \
-                    .filter(Image.img_no.in_(second_query))\
-                    .order_by(Image.reg_date.desc())
-
-                _images = final_query.all()
-
-                result = query2list(_images, ['img_no', 'thum_url',
-                                              'reg_date'])  # 추출된 이미지 데이터를 리스트로 변환(img_no, thum_url, reg_date 속성만)
-
-                return result
+            return result
         except Exception as e:
             # Error 발생
             print("GET_IMAGE_LIST_BY_TAGS 실패 : tag_list = {}, user_no = {}".format(tag_list, user_no))
