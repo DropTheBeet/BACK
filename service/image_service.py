@@ -30,7 +30,7 @@ class ImageService:
         return self.image_dao.insert_rec_tag_importance(total_data)
 
     def insert_image(self, upload_image_info):
-        URL = 'http://f071cab57df2.ngrok.io/recognized_tag'
+        URL = 'http://409e5a8b0796.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
@@ -140,10 +140,12 @@ class ImageService:
         in_mem_file = io.BytesIO()
         original_image.save(in_mem_file, format=original_image.format)
         in_mem_file.seek(0)
+
+        str_user_no = str(user_no)
         self.s3.upload_fileobj(
             in_mem_file,
             self.config['S3_BUCKET'],
-            filename,
+            "beet/"+str_user_no+"/"+filename,
             ExtraArgs={
             "ContentType": 'image/jpeg'
             }
@@ -157,14 +159,14 @@ class ImageService:
         self.s3.upload_fileobj(
             thum_in_mem_file,
             self.config['S3_BUCKET'],
-            thumfilename,
+            "beet/"+str_user_no+"/"+thumfilename,
             ExtraArgs={
                 "ContentType": 'image/jpeg'
             }
         )
 
-        thum_url = f"{self.config['S3_BUCKET_URL']}{thumfilename}"
-        img_url = f"{self.config['S3_BUCKET_URL']}{filename}"
+        thum_url = f"{self.config['S3_BUCKET_URL']}/beet/{str_user_no}/{thumfilename}"
+        img_url = f"{self.config['S3_BUCKET_URL']}/beet/{str_user_no}/{filename}"
 
 
         img = {'filename':filename, 'img_url':img_url, 'thum_url':thum_url, 'user_no':user_no, 'img_w':img_size[0], 'img_h':img_size[1]}
