@@ -62,9 +62,21 @@ def create_endpoints(app, services):
     @app.route("/sign-up", methods=['POST'])
     def sign_up():
         new_user = request.json # user_id, user_pw
-        new_user = user_service.create_new_user(new_user)
+        new_user_origin = new_user.copy()
+        user_service.create_new_user(new_user)
+        credential = new_user_origin  # user_id, user_pw
+        authorized = user_service.login(credential)
 
-        return jsonify(new_user)
+        if authorized:
+            user_credential = user_service.get_user_no_and_password(credential['user_id'])
+            user_no = user_credential['user_no']
+            token = user_service.generate_access_token(user_no, credential['user_id'])
+
+            return jsonify({
+                'token' : token
+            })
+        else:
+            return '', 401
 
     @app.route('/login', methods=['POST'])
     def login():
@@ -78,7 +90,7 @@ def create_endpoints(app, services):
 
             return jsonify({
                 'user_no': user_no,
-                'access_token': token
+                'token': token
             })
         else:
             return '', 401
@@ -92,6 +104,8 @@ def create_endpoints(app, services):
             user_id = g.user_id
             tag_list = tag_service.get_tag_list_by_user(user_no)
             user_images = image_service.get_image_list_by_user(user_no)
+            print(user_images)
+            tag_list = tag_service.attach_active_false(tag_list)
             if user_images:
                 return jsonify({
                     'img_info': user_images,
@@ -101,10 +115,11 @@ def create_endpoints(app, services):
                     'type': 'S'
                 })
             else:
-                return '', 404
+                return '사용자가 가지고 있는 사진이 없습니다', 404
         else:
             user_no = g.user_no
             user_tags_images = image_service.get_image_list_by_tags(tag_list, user_no=user_no)
+            tag_list = tag_service.get_tag_list_by_user(user_no)
             if user_tags_images:
                 return jsonify({
                     'img_info': user_tags_images,
@@ -113,18 +128,16 @@ def create_endpoints(app, services):
                     'type': 'S'
                 })
             else:
-                return '', 404
+                return '사용자가 가지고 있는 사진중 해당 TAG 들을 가지고 있는 사진이 없습니다\n', 404
 
     # 유입 , 이미지 넘버 클릭에 대해, home > S(검색),   public > S(검색),  public > R(추천)
 
     @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "S"}'
     @login_required
     def get_image_detail():
-        if 'type' in request.json:
+        if request.json['type'] == {}:
             img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
-            type = request.json['type']
             user_no = g.user_no
-            image_service.insert_click_data(user_no, img_no, type)
             like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
             original_image = image_service.get_image_detail(img_no, user_no)
             if original_image:
@@ -137,7 +150,9 @@ def create_endpoints(app, services):
                 return '', 404
         else:
             img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            type = request.json['type']
             user_no = g.user_no
+            image_service.insert_click_data(user_no, img_no, type)
             like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
             original_image = image_service.get_image_detail(img_no, user_no)
             if original_image:
@@ -168,7 +183,7 @@ def create_endpoints(app, services):
     @login_required
     def upload_image():
         user_no = g.user_no
-        print(request.files)
+        print(request.files['upload_image'])
 
         if 'upload_image' not in request.files:
             return 'File is missing', 404
@@ -210,17 +225,23 @@ def create_endpoints(app, services):
                 return jsonify({
                     'img_info': recommended_image,
                     'user_no': user_no,
-                    'search_tag_list': search_tag_list,
+                    'tag_list': search_tag_list,
                     'type': 'R'
                 })
             else:
-                return '', 404
+                return jsonify({
+                    'img_info': [],
+                    'user_no': user_no,
+                    'tag_list': search_tag_list,
+                    'type': 'R'
+                })
         else:
             user_tags_images = image_service.get_image_list_by_tags(tag_list)
+            search_tag_list = tag_service.get_public_tag_list()
             if user_tags_images:
                 return jsonify({
                     'img_info': user_tags_images,
-                    'tag_list': tag_list,
+                    'tag_list': search_tag_list,
                     'type': 'S'
                 })
             else:
@@ -233,7 +254,9 @@ def create_endpoints(app, services):
     @login_required
     def get_like_image_by_user():
         user_no = g.user_no
+        print(user_no)
         like_images = image_service.get_like_image_by_user(user_no)
+        print(like_images)
         if like_images:
             return jsonify({
                 'img_info' : like_images,
@@ -262,6 +285,29 @@ def create_endpoints(app, services):
             image_service.insert_rec_tag_importance(img_no[0], importance_data)
 
         return '', 200
+
+    @app.route('/auth', methods=['GET'])
+    def check_auth():
+        access_token = request.headers.get('Authorization')
+        if access_token is not None:
+            try:
+                payload = jwt.decode(access_token, current_app.config['JWT_SECRET_KEY'], 'HS256')
+            except jwt.InvalidTokenError:
+                payload = None
+
+            if payload is None: return Response(status=401)
+
+            user_no = payload['user_no']
+            user_id = payload['user_id']
+        else:
+            return Response(status=401)
+
+
+
+        return jsonify({
+                'user_no' : user_no,
+                'user_id' : user_id,
+            })
 
 
     #
