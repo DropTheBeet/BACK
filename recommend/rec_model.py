@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
+from functools import reduce
 
 
 # 추천 모델
@@ -10,7 +11,7 @@ class RecModel:
     # SIG_LEVEL은 최소 신뢰도(공통 태그 선호도의 갯수)
     SIG_LEVEL = 5
     # MIN_RATINGS는 최소 선호도 점수를 뜻함
-    MIN_RATINGS = 15
+    MIN_RATINGS = 5
 
     def __init__(self, user_data, preferences):
         self.user_data = user_data
@@ -20,13 +21,12 @@ class RecModel:
         x = preferences.copy()
         y = preferences['user_no']
 
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, stratify=y)
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1, stratify=y)
 
         self.set_rating(x_train)
         self.set_best_neighbor_size(x_test)
 
     def get_recommend_images(self, user_no, taglist, rec_taglist):
-
         n_size = self.best_neighbor_size[0]  # 최적의 neighbor_size
 
         recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=n_size)
@@ -47,7 +47,7 @@ class RecModel:
         def map_reduce(subset):
             tag_no = subset['tag_no']
             m = map(lambda x: np.eye(80)[x - 1], tag_no)
-            from functools import reduce
+
             r = reduce(lambda x, y: x + y, m)
             return r
 
@@ -60,14 +60,24 @@ class RecModel:
             recommend_image[t_no - 1] = 1.
 
         info_list = np.array(image_info)
-        recom_list = recommend_image  # 추천 태그 리스트 벡터
-        return self.get_best_imgs(info_list, recom_list)
 
-    def get_best_imgs(self, info_list, recom_list, num=30):
+        image_info.to_csv('image_info.csv')
+        img_no_df = pd.read_csv("image_info.csv", sep=",", encoding="CP949", header=None)
+        img_no_df = img_no_df.rename(columns=img_no_df.iloc[0])
+        # 조정후 필요없는 행 삭제
+        img_no_df = img_no_df.drop(img_no_df.index[0])
+
+        img_no_df['image_no'] = img_no_df['image_no'].apply(pd.to_numeric, errors="ignore")
+
+        recom_list = recommend_image  # 추천 태그 리스트 벡터
+
+        return self.get_best_imgs(info_list, img_no_df['image_no'], recom_list)
+
+    def get_best_imgs(self, info_list, img_no_list, recom_list, num=30):
         # 상위 30개 이미지 번호와 유사도
         best_img_sims = [[-1, -1], ]
 
-        for img_no, image_vector in tqdm(enumerate(info_list), desc="get_best_imgs"):
+        for img_no, image_vector in tqdm(zip(img_no_list, info_list), desc="get_best_imgs"):
             # 유사도 계산
             cos_sim = self.compute_cos_similarity(recom_list, image_vector)
 
@@ -157,22 +167,22 @@ class RecModel:
         recommendations = recom_tags['tag']
         return recommendations
 
-    def recom_tag(self, user_no, n_items, tags, neighbor_size=90):
+    def recom_tag(self, user_no, n_items, tags, neighbor_size=100):
         # 현 사용자가 평가한 태그 가져오기
         user_tag = self.rating_bias.loc[user_no].copy()
 
         for tagname in tqdm(self.rating_bias, desc="recom_tag"):
             # tag를 예상 선호도에 따라 정렬하여 태그 이름으로 리턴
             user_tag.loc[tagname] = self.CF_knn_bias_sig(user_no, tagname, neighbor_size)
-            tag_sort = user_tag.sort_values(ascending=False)[:n_items]
-            indexs = [i - 1 for i in tag_sort.index]
-            print("n_items : {}".format(n_items))
-            print("tag_sort :")
-            print(tag_sort)
-            recom_tags = tags.loc[indexs]
-            recommendations = recom_tags['tag']
+        tag_sort = user_tag.sort_values(ascending=False)[:n_items]
+        indexs = [i - 1 for i in tag_sort.index]
+        print("n_items : {}".format(n_items))
+        print("tag_sort :")
+        print(tag_sort)
+        recom_tags = tags.loc[indexs]
+        recommendations = recom_tags['tag']
 
-            return recommendations
+        return recommendations
 
     # RMSE 함수 생성
     def RMSE(self, y_true, y_pred):
@@ -194,10 +204,10 @@ class RecModel:
 
     # 최적의 이웃의 수 정하기
     def set_best_neighbor_size(self, x_test):
-        best_match = 6
+        best_match = 10
         best_n_size = 0
         best_match_RMSE = 0
-        for neighbor_size in tqdm([10, 20, 30, 40, 50, 60, 70, 80, 90, 100], desc="best_neighbor_size"):
+        for neighbor_size in tqdm([100, 110, 120, 130, 140, 150, 160, 170, 180, 190], desc="best_neighbor_size"):
             score = self.score(self.CF_knn_bias_sig, x_test, neighbor_size)
             if score < best_match:
                 best_match = score

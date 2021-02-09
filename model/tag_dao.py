@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from model.models import Tag, Rec_tag, Image
+from model.models import Tag, Rec_tag, Image, Likes
 
 
 # 태그 DAO
@@ -60,15 +60,34 @@ class TagDAO:
 
         return tag_list
 
-    def get_tags_rating(self, user_no):
-        tags_rating = self.db.execute(text("""
+    # 사용자가 좋아요한 사진에 존재하는 태그 리스트 조회
+    def get_like_tag_list_by_user(self, user_no):
+        try:
+            # SELECT * FROM likes WHERE user_no = ( 사용자 번호 )
+            _likes = Likes.query.filter_by(user_no=user_no)
+            # SELECT * FROM recognized_tag
+            # WHERE img_no IN ( SELECT img_no FROM likes WHERE user_no = ( 사용자 번호 ) ) GROUP BY tag_no
+            _rec_tag = self.db.session.query(Rec_tag) \
+                .filter(Rec_tag.img_no.in_([like.images.img_no for like in _likes])) \
+                .group_by(Rec_tag.tag_no).all()
+        except Exception as e:
+            # Error 발생할 경우
+            print("GET_TAG_LIST_BY_USER 실패 : user_no = {}".format(user_no))
+            print(e)
+            return False
 
-        """), {
-            'user_no': user_no
-        }).fetchall()
+        tag_list = []
 
+        for rt in _rec_tag:
+            d = rt.tag.as_dict()  # 태그 데이터 ( tag_no, cate_no, tag, tag_han )
+            d.update(rt.tag.category.major.as_dict())  # 대분류 데이터 ( major_no, c_major )
+            d.update(rt.tag.category.middle.as_dict())  # 중분류 데이터 ( middle_no, c_middle )
+            tag_list.append(d)
 
-        return [{
-            'tag_no': tag_rating['tag_no'],
-            'rating': tag_rating['rating']
-        } for tag_rating in tags_rating ]
+        if len(tag_list) == 0:
+            return None
+
+        print(tag_list)
+        return tag_list
+
+    # 대분류,중분류,태그
