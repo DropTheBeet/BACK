@@ -16,3 +16,6 @@ class TagService:
         for tag_info in tag_list:
             tag_info['active'] = 'false'
         return tag_list
+
+    def get_like_tag_list_by_user(self, user_no):
+        return self.get_like_tag_list_by_user(user_no)
