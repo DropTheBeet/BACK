@@ -4,8 +4,9 @@ class ModelService:
 
     def recommendation_update(self):
         try:
-            self.model_dao.set_model()
+            self.model_dao.set_input_data()
             self.model_dao.update_tag_preferences()
+            self.model_dao.set_model()
             self.model_dao.set_recommend_images()
             return True
         except Exception as e:
