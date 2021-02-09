@@ -273,6 +273,8 @@ class Rec_tag_importance(db.Model):
     importance = db.Column(db.Float)                                            # 인식된 태그 중요도
     num = db.Column(db.Integer)                                                 # 인식된 태그 갯수
 
+    image = db.relationship('Image', backref='rec_tag_imp')  # 이미지 테이블과 관계 생성 (Image(클래스이름) 참조, backref : 이미지 테이블에서 참조하는 이름)
+
     def __init__(self, img_no, tag_no, importance, num):
         self.img_no = img_no
         self.tag_no = tag_no
