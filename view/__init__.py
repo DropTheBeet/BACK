@@ -132,7 +132,7 @@ def create_endpoints(app, services):
 
     # 유입 , 이미지 넘버 클릭에 대해, home > S(검색),   public > S(검색),  public > R(추천)
 
-    @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "S"}'
+    @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "" }'
     @login_required
     def get_image_detail():
         if request.json['type'] == {}:
@@ -254,13 +254,13 @@ def create_endpoints(app, services):
     @login_required
     def get_like_image_by_user():
         user_no = g.user_no
-        print(user_no)
         like_images = image_service.get_like_image_by_user(user_no)
-        print(like_images)
+        search_tag_list = tag_service.get_like_tag_list_by_user(user_no)
         if like_images:
             return jsonify({
                 'img_info' : like_images,
                 'user_no' : user_no,
+                'tag_list' : search_tag_list
             })
         else:
             return '', 404
@@ -301,8 +301,6 @@ def create_endpoints(app, services):
             user_id = payload['user_id']
         else:
             return Response(status=401)
-
-
 
         return jsonify({
                 'user_no' : user_no,
