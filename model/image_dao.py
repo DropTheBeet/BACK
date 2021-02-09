@@ -31,9 +31,8 @@ class ImageDAO:
     def get_image_list_by_tags(self, tag_list, user_no=None, type=None):
         if user_no:
             if type == "L":    # 사용자가 좋아요한 이미지 중에서 조회할 경우
-                first_query = self.db.session.query(Image.img_no) \
-                    .filter(Image.user_no == user_no) \
-                    .order_by(Image.reg_date.desc()).subquery()
+                first_query = self.db.session.query(Likes.img_no) \
+                    .filter(Likes.user_no==user_no).subquery()
             else:       # 사용자가 업로드한 이미지 중에서 조회할 경우
                 # SELECT img_no FROM image WHERE user_no = 유저 번호
                 first_query = self.db.session.query(Image.img_no)\
