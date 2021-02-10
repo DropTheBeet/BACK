@@ -30,7 +30,7 @@ class ImageService:
         return self.image_dao.insert_rec_tag_importance(total_data)
 
     def insert_image(self, upload_image_info):
-        URL = 'http://9d63b6a70d8c.ngrok.io/recognized_tag'
+        URL = 'http://f3762e1c0e06.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
