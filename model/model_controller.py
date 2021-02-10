@@ -97,7 +97,7 @@ class ModelController(Thread):
     def set_recom_img_by_user(self, user_no):
         self.update_tag_preferences(user_no=user_no)
 
-        prefer_df = self.get_preferences_to_df()
+        prefer_df = self.model_dao.get_preferences_to_df()
         self.rec_model.set_prefer(prefer_df)
 
         print("user_no[{}] 추천 이미지 세팅...".format(user_no))

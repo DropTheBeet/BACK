@@ -326,6 +326,19 @@ def create_endpoints(app, services):
                 'user_id' : user_id,
             })
 
+    @app.route('/home/updatepreference/', methods=['GET'])
+    @login_required
+    def updatepreference():
+        user_no = g.user_no
+        try:
+            response = model_service.set_recom_img(user_no)
+            return '',200
+        except:
+            return '',400
+
+
+
+
 
     #
     # @app.route('/profile-picture/<int:user_no>', methods=['GET'])
