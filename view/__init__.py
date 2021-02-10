@@ -50,23 +50,37 @@ def create_endpoints(app, services):
     user_service = services.user_service
     tag_service = services.tag_service
     image_service = services.image_service
+    model_service = services.model_service
 
     @app.route("/ping", methods=['GET'])
     def ping():
-        return "pong"
+
+        return "pongg"
 
 
 ## id, 비밀번호 만 들어옴
     @app.route("/sign-up", methods=['POST'])
     def sign_up():
-        new_user = request.json # user_id, password
-        new_user = user_service.create_new_user(new_user)
+        new_user = request.json # user_id, user_pw
+        new_user_origin = new_user.copy()
+        user_service.create_new_user(new_user)
+        credential = new_user_origin  # user_id, user_pw
+        authorized = user_service.login(credential)
 
-        return jsonify(new_user)
+        if authorized:
+            user_credential = user_service.get_user_no_and_password(credential['user_id'])
+            user_no = user_credential['user_no']
+            token = user_service.generate_access_token(user_no, credential['user_id'])
+
+            return jsonify({
+                'token' : token
+            })
+        else:
+            return '', 401
 
     @app.route('/login', methods=['POST'])
     def login():
-        credential = request.json #user_id, password
+        credential = request.json #user_id, user_pw
         authorized = user_service.login(credential)
 
         if authorized:
@@ -76,75 +90,105 @@ def create_endpoints(app, services):
 
             return jsonify({
                 'user_no': user_no,
-                'access_token': token
+                'token': token
             })
         else:
             return '', 401
 
-
-    @app.route('/home', methods=['GET'])
+    @app.route('/home', methods=['POST'])
     @login_required
-    def get_home_image_by_id():
-        user_no = g.user_no
-        tag_list = tag_service.get_tag_list_by_id(user_no)
-        user_images = image_service.get_image_list_by_id(user_no)
-        if user_images:
-            return jsonify({
-                'img_info' : user_images,
-                'user_no' : user_no,
-                'tag_list' : tag_list   #대분류,중분류,태그
-            })
-        else:
-            return '', 404
-
-    @app.route('/home/tags', methods=['POST'])
-    @login_required
-    def get_home_image_by_tags():
+    def get_home_image_by_user():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
-        user_no = g.user_no
-        user_tags_images = image_service.get_image_list_by_tags(tag_list, user_no=user_no)
-        if user_tags_images:
-            return jsonify({
-                'img_info': user_tags_images,
-                'user_no': user_no,
-                'tag_list': tag_list
-            })
+        if tag_list == list([]):
+            user_no = g.user_no
+            user_id = g.user_id
+            tag_list = tag_service.get_tag_list_by_user(user_no)
+            user_images = image_service.get_image_list_by_user(user_no)
+            print(user_images)
+            if user_images:
+                return jsonify({
+                    'img_info': user_images,
+                    'user_no': user_no,
+                    'user_id': user_id,
+                    'tag_list': tag_list,  # 대분류,중분류,태그
+                    'type': 'S'
+                })
+            else:
+                return '사용자가 가지고 있는 사진이 없습니다', 404
         else:
-            return '', 404
+            user_no = g.user_no
+            user_tags_images = image_service.get_image_list_by_tags(tag_list, user_no=user_no)
+            tag_list = tag_service.get_tag_list_by_user(user_no)
+            if user_tags_images:
+                return jsonify({
+                    'img_info': user_tags_images,
+                    'user_no': user_no,
+                    'tag_list': tag_list,
+                    'type': 'S'
+                })
+            else:
+                return '사용자가 가지고 있는 사진중 해당 TAG 들을 가지고 있는 사진이 없습니다\n', 404
 
-    @app.route('/home/detail/<int:img_no>', methods=['GET'])
+    # 유입 , 이미지 넘버 클릭에 대해, home > S(검색),   public > S(검색),  public > R(추천)
+
+    @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "" }'
     @login_required
-    def get_image_detail(img_no):
-        user_no = g.user_no
-        like_or_unlike = image_service.like_or_unlike_by_id_img(img_no, user_no)
-        original_image = image_service.get_image_detail(img_no, user_no)
-        if original_image:
-            return jsonify({
-                'img_info': original_image,
-                'user_no': user_no,
-                'like_or_unlike': like_or_unlike
-            })
+    def get_image_detail():
+        if 'type' in request.json:
+            img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            type = request.json['type']
+            user_no = g.user_no
+            image_service.insert_click_data(user_no, img_no, type)
+            like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
+            original_image = image_service.get_image_detail(img_no, user_no)
+            if original_image:
+                return jsonify({
+                    'img_info': original_image,
+                    'user_no': user_no,
+                    'like_or_unlike': like_or_unlike
+                })
+            else:
+                return '', 404
         else:
-            return '', 404
+            img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            user_no = g.user_no
+            like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
+            original_image = image_service.get_image_detail(img_no, user_no)
+            if original_image:
+                return jsonify({
+                    'img_info': original_image,
+                    'user_no': user_no,
+                    'like_or_unlike': like_or_unlike
+                })
+            else:
+                return '', 404
+
+
 
 
     @app.route('/like/<int:img_no>', methods=['GET'])
     @login_required
     def insert_or_delete_like(img_no):
         user_no = g.user_no
-        like_or_unlike = image_service.like_or_unlike_by_id_img(img_no, user_no)
+        like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
         if(like_or_unlike):
-            success = image_service.delete_like(img_no, user_no)
-            return success
+            image_service.delete_like(img_no, user_no)
+            return jsonify({
+                    'like' : 0
+                })
         else:
-            success = image_service.insert_like(img_no, user_no)
-            return success
+            image_service.insert_like(img_no, user_no)
+            return jsonify({
+                    'like' : 1
+                })
 
 
     @app.route('/home/upload', methods=['POST'])
     @login_required
     def upload_image():
         user_no = g.user_no
+        print(request.files['upload_image'])
+
         if 'upload_image' not in request.files:
             return 'File is missing', 404
 
@@ -154,80 +198,143 @@ def create_endpoints(app, services):
             return 'File is missing', 404
 
         filename = secure_filename(upload_image.filename)
-        image_service.upload_image(upload_image, filename, user_no)
+        upload_image_info = image_service.upload_image(upload_image, filename, user_no)
+        # 비동기 처리하기
+        img_no = image_service.insert_image(upload_image_info)
+        rec_tags_info = image_service.get_image_tags_rec_info(img_no)
+        score_data = image_service.get_tag_importance_test(rec_tags_info)
+        importance_data = image_service.get_importance_percentage(score_data)
+        image_service.insert_rec_tag_importance(img_no, importance_data)
 
         return '', 200
 
     @app.route('/home/delete/<int:img_no>', methods=['GET'])
     @login_required
     def delete_image(img_no):
-       image_service.delete_image(img_no)
+       deleted_filename = image_service.delete_image(img_no)
+       print(deleted_filename)
 
        return '', 200
 
 
-    #여기서 부터 퍼블릭
-    @app.route('/public', methods=['GET'])
+    @app.route('/public', methods=['POST'])
     @login_required
-    def get_search_tags_public_recommend_image():
-        user_no = g.user_no
-        search_tag_list = tag_service.get_public_tag_list() #  검색용태그 리스트
-        recommended_tags_rating = tag_service.get_tags_rating(user_no)  # tag별 rating값 받음 딕셔너리 형태
-        recommended_image_by_tensor = image_service.get_recommended_image_by_tensor(recommended_tags_rating, user_no) ##추천된 tag기준으로 이미지 파일 추천 받음
-        if recommended_image_by_tensor:
-            return jsonify({
-                'img_info': recommended_image_by_tensor,
-                'user_no': user_no,
-                'search_tag_list': search_tag_list
-            })
-        else:
-            return '', 404
-
-
-    @app.route('/public/tags', methods=['POST'])
     def get_public_image_by_tags():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
-        user_tags_images = image_service.get_image_list_by_tags(tag_list)
-        if user_tags_images:
-            return jsonify({
-                'img_info': user_tags_images,
-                'tag_list': tag_list
-            })
+        if tag_list == list([]):
+            user_no = g.user_no
+            search_tag_list = tag_service.get_public_tag_list()  # 검색용태그 리스트
+            recommended_image = image_service.get_recommend_image_list_by_user(user_no)  ##유저기준 이미지 파일 추천 받음
+            if recommended_image:
+                return jsonify({
+                    'img_info': recommended_image,
+                    'user_no': user_no,
+                    'tag_list': search_tag_list,
+                    'type': 'R'
+                })
+            else:
+                return jsonify({
+                    'img_info': [],
+                    'user_no': user_no,
+                    'tag_list': search_tag_list,
+                    'type': 'R'
+                })
         else:
-            return '', 404
+            user_tags_images = image_service.get_image_list_by_tags(tag_list)
+            search_tag_list = tag_service.get_public_tag_list()
+            if user_tags_images:
+                return jsonify({
+                    'img_info': user_tags_images,
+                    'tag_list': search_tag_list,
+                    'type': 'S'
+                })
+            else:
+                return '', 404
 
 
     # like
 
-    @app.route('/likeimage', methods=['GET'])
-    @login_required
-    def get_like_image_by_id():
-        user_no = g.user_no
-        like_images = image_service.get_like_image_by_id(user_no)
-        if like_images:
-            return jsonify({
-                'img_info' : like_images,
-                'user_no' : user_no,
-            })
+    @app.route('/likeimage', methods=['POST']) ## { tags : [], type : "L" }
+    @login_required         ## 초기 유저 전체 이미지 및  검색 태그 리스트 업로드
+    def get_like_image_by_user():
+        tag_list = request.json['tags']   # tags,  tag_no 리스트
+        if tag_list == list([]):
+            user_no = g.user_no
+            like_images = image_service.get_like_image_by_user(user_no) #사용자가 좋아요 한 이미지 리스트 조회  기
+            search_tag_list = tag_service.get_like_tag_list_by_user(user_no) #사용자가 좋아요 한 태그 리스트 조회
+            if like_images:
+                return jsonify({
+                    'img_info' : like_images,
+                    'user_no' : user_no,
+                    'tag_list' : search_tag_list
+                })
+            else:
+                return '사용자가 가지고 있는 사진이 없습니다\n', 404
+
+        else:
+            user_no = g.user_no
+            like_images = image_service.get_image_list_by_tags(tag_list, user_no, "L")
+            search_tag_list = tag_service.get_like_tag_list_by_user(user_no)
+            if like_images:
+                return jsonify({
+                    'img_info' : like_images,
+                    'user_no' : user_no,
+                    'tag_list' : search_tag_list
+                })
+            else:
+                return '사용자가 가지고 있는 사진중 해당 TAG 들을 가지고 있는 사진이 없습니다\n', 404
+
+
+    @app.route('/test', methods=['GET'])
+    def recommendation_update():
+        success = model_service.recommendation_update()
+        if(success):
+            return '', 200
         else:
             return '', 404
 
 
+    @app.route('/test_rec_tag', methods=['GET'])
+    def test_rec_tag():
+        img_no_list = image_service.get_img_no()
+        for img_no in img_no_list:
+            rec_tags_info = image_service.get_image_tags_rec_info(img_no[0])
+            score_data = image_service.get_tag_importance_test(rec_tags_info)
+            importance_data = image_service.get_importance_percentage(score_data)
+            image_service.insert_rec_tag_importance(img_no[0], importance_data)
 
+        return '', 200
 
+    @app.route('/auth', methods=['GET'])
+    def check_auth():
+        access_token = request.headers.get('Authorization')
+        if access_token is not None:
+            try:
+                payload = jwt.decode(access_token, current_app.config['JWT_SECRET_KEY'], 'HS256')
+            except jwt.InvalidTokenError:
+                payload = None
 
+            if payload is None: return Response(status=401)
 
+            user_no = payload['user_no']
+            user_id = payload['user_id']
+        else:
+            return Response(status=401)
 
+        return jsonify({
+                'user_no' : user_no,
+                'user_id' : user_id,
+            })
 
-
-
-
-
-
-
-
-
-
+    @app.route('/home/updatepreference/', methods=['GET'])
+    @login_required
+    def updatepreference():
+        user_no = g.user_no
+        try:
+            response = model_service.set_recom_img(user_no)
+            return '',200
+        except:
+            return '',400
 
 
 
