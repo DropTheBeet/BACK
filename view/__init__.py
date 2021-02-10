@@ -105,7 +105,6 @@ def create_endpoints(app, services):
             tag_list = tag_service.get_tag_list_by_user(user_no)
             user_images = image_service.get_image_list_by_user(user_no)
             print(user_images)
-            tag_list = tag_service.attach_active_false(tag_list)
             if user_images:
                 return jsonify({
                     'img_info': user_images,
@@ -135,20 +134,7 @@ def create_endpoints(app, services):
     @app.route('/home/detail', methods=['POST'])    # '{"img_no": 10210, "type" : "" }'
     @login_required
     def get_image_detail():
-        if request.json['type'] == {}:
-            img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
-            user_no = g.user_no
-            like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
-            original_image = image_service.get_image_detail(img_no, user_no)
-            if original_image:
-                return jsonify({
-                    'img_info': original_image,
-                    'user_no': user_no,
-                    'like_or_unlike': like_or_unlike
-                })
-            else:
-                return '', 404
-        else:
+        if 'type' in request.json:
             img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
             type = request.json['type']
             user_no = g.user_no
@@ -163,6 +149,20 @@ def create_endpoints(app, services):
                 })
             else:
                 return '', 404
+        else:
+            img_no = request.json['img_no']  # img_no, type (추천클릭인지, 검색클릭인지)
+            user_no = g.user_no
+            like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
+            original_image = image_service.get_image_detail(img_no, user_no)
+            if original_image:
+                return jsonify({
+                    'img_info': original_image,
+                    'user_no': user_no,
+                    'like_or_unlike': like_or_unlike
+                })
+            else:
+                return '', 404
+
 
 
 
@@ -173,10 +173,14 @@ def create_endpoints(app, services):
         like_or_unlike = image_service.like_or_unlike_by_user_img(img_no, user_no)
         if(like_or_unlike):
             image_service.delete_like(img_no, user_no)
-            return '', 200
+            return jsonify({
+                    'like' : 0
+                })
         else:
             image_service.insert_like(img_no, user_no)
-            return '', 200
+            return jsonify({
+                    'like' : 1
+                })
 
 
     @app.route('/home/upload', methods=['POST'])
@@ -250,20 +254,35 @@ def create_endpoints(app, services):
 
     # like
 
-    @app.route('/likeimage', methods=['GET'])
-    @login_required
+    @app.route('/likeimage', methods=['POST']) ## { tags : [], type : "L" }
+    @login_required         ## 초기 유저 전체 이미지 및  검색 태그 리스트 업로드
     def get_like_image_by_user():
-        user_no = g.user_no
-        like_images = image_service.get_like_image_by_user(user_no)
-        search_tag_list = tag_service.get_like_tag_list_by_user(user_no)
-        if like_images:
-            return jsonify({
-                'img_info' : like_images,
-                'user_no' : user_no,
-                'tag_list' : search_tag_list
-            })
+        tag_list = request.json['tags']   # tags,  tag_no 리스트
+        if tag_list == list([]):
+            user_no = g.user_no
+            like_images = image_service.get_like_image_by_user(user_no) #사용자가 좋아요 한 이미지 리스트 조회  기
+            search_tag_list = tag_service.get_like_tag_list_by_user(user_no) #사용자가 좋아요 한 태그 리스트 조회
+            if like_images:
+                return jsonify({
+                    'img_info' : like_images,
+                    'user_no' : user_no,
+                    'tag_list' : search_tag_list
+                })
+            else:
+                return '사용자가 가지고 있는 사진이 없습니다\n', 404
+
         else:
-            return '', 404
+            user_no = g.user_no
+            like_images = image_service.get_image_list_by_tags(tag_list, user_no, "L")
+            search_tag_list = tag_service.get_like_tag_list_by_user(user_no)
+            if like_images:
+                return jsonify({
+                    'img_info' : like_images,
+                    'user_no' : user_no,
+                    'tag_list' : search_tag_list
+                })
+            else:
+                return '사용자가 가지고 있는 사진중 해당 TAG 들을 가지고 있는 사진이 없습니다\n', 404
 
 
     @app.route('/test', methods=['GET'])
