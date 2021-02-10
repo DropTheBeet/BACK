@@ -12,6 +12,8 @@ class RecModel:
     SIG_LEVEL = 5
     # MIN_RATINGS는 최소 선호도 점수를 뜻함
     MIN_RATINGS = 5
+    # 추천 이미지 수
+    BEST_IMAGE_NUM = 100
 
     def __init__(self, user_data, preferences):
         self.user_data = user_data
@@ -26,9 +28,22 @@ class RecModel:
         self.set_rating(x_train)
         self.set_best_neighbor_size(x_test)
 
+    def set_prefer(self, preferences):
+        self.tag_mean = preferences.groupby(['tag_no'])['preference'].mean()
+
+        # 데이터셋 train과 test로 분리
+        x = preferences.copy()
+        y = preferences['user_no']
+
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1, stratify=y)
+
+        self.set_rating(x_train)
+        self.set_best_neighbor_size(x_test)
+
     def get_recommend_images(self, user_no, taglist, rec_taglist):
         n_size = self.best_neighbor_size[0]  # 최적의 neighbor_size
-
+        print(self.rating_bias)
+        print(user_no, type(user_no))
         recom_tag = self.recom_tag(user_no=user_no, n_items=10, tags=taglist, neighbor_size=n_size)
         recommend_list = recom_tag
 
@@ -37,53 +52,25 @@ class RecModel:
         # image no가 있는 데이터셋 불러오기
         rec_tag_df = rec_taglist
 
-        # object형 데이터 int로 변환해주기
-        rec_tag_df[['user_no', 'tag_no', 'image_no']] = rec_tag_df[['user_no', 'tag_no', 'image_no']].apply(
-            pd.to_numeric,
-            errors="ignore")
-
-        # map - reduce 작업 (태그하나와 이미지 하나를 같은 벡터로 보고 펼쳐준 후,
-        # 다시 합쳐 80개의 태그, 이미지를 하나의 벡터로 만드는 작업)
-        def map_reduce(subset):
-            tag_no = subset['tag_no']
-            m = map(lambda x: np.eye(80)[x - 1], tag_no)
-
-            r = reduce(lambda x, y: x + y, m)
-            return r
-
-        image_info = rec_tag_df.groupby("image_no").apply(map_reduce)
-
         # 리스트에 담긴 값은 추천된 10개의 태그를 하나의 벡터로 만들어놓은 값이다.
         recommend_image = np.zeros(80, dtype=float)
         for tag_no in recom_list:
             t_no = int(tag_no)
             recommend_image[t_no - 1] = 1.
 
-        info_list = np.array(image_info)
-
-        image_info.to_csv('image_info.csv')
-        img_no_df = pd.read_csv("image_info.csv", sep=",", encoding="CP949", header=None)
-        img_no_df = img_no_df.rename(columns=img_no_df.iloc[0])
-        # 조정후 필요없는 행 삭제
-        img_no_df = img_no_df.drop(img_no_df.index[0])
-
-        img_no_df['image_no'] = img_no_df['image_no'].apply(pd.to_numeric, errors="ignore")
-
         recom_list = recommend_image  # 추천 태그 리스트 벡터
 
-        return self.get_best_imgs(info_list, img_no_df['image_no'], recom_list)
+        return self.get_best_imgs(rec_tag_df, recom_list)
 
-    def get_best_imgs(self, info_list, img_no_list, recom_list, num=30):
+    def get_best_imgs(self, rec_tag_df, recom_list):
         # 상위 30개 이미지 번호와 유사도
         best_img_sims = [[-1, -1], ]
-
-        for img_no, image_vector in tqdm(zip(img_no_list, info_list), desc="get_best_imgs"):
+        for img_no, image_vector in tqdm(rec_tag_df, desc="get_best_imgs"):
             # 유사도 계산
             cos_sim = self.compute_cos_similarity(recom_list, image_vector)
-
             for i in range(0, len(best_img_sims)):
                 if cos_sim > best_img_sims[i][1]:  # 계산된 유사도를 리스트와 비교
-                    if len(best_img_sims) < num:  # 리스트의 요소가 num 미만일 경우
+                    if len(best_img_sims) < self.BEST_IMAGE_NUM:  # 리스트의 요소가 num 미만일 경우
                         best_img_sims.insert(i, [img_no, cos_sim])  # 해당 위치에 삽입
                         break
                     else:  # 그렇지 않을 경우
