@@ -15,8 +15,8 @@ class ImageService:
     def get_image_list_by_user(self, user_no):
         return self.image_dao.get_image_list_by_user(user_no)
 
-    def get_image_list_by_tags(self, tag_list, user_no=None):
-        return self.image_dao.get_image_list_by_tags(tag_list, user_no)
+    def get_image_list_by_tags(self, tag_list, user_no=None, type=None):
+        return self.image_dao.get_image_list_by_tags(tag_list, user_no, type)
 
     def get_image_detail(self, img_no, user_no):
         return self.image_dao.get_image_detail(img_no, user_no)
@@ -30,7 +30,7 @@ class ImageService:
         return self.image_dao.insert_rec_tag_importance(total_data)
 
     def insert_image(self, upload_image_info):
-        URL = 'http://409e5a8b0796.ngrok.io/recognized_tag'
+        URL = 'http://9d63b6a70d8c.ngrok.io/recognized_tag'
         headers = {
             'Content-Type': 'application/json;'
         }
