@@ -99,6 +99,7 @@ def create_endpoints(app, services):
     @login_required
     def get_home_image_by_user():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
+        print(tag_list)
         if tag_list == list([]):
             user_no = g.user_no
             user_id = g.user_id
@@ -114,7 +115,13 @@ def create_endpoints(app, services):
                     'type': 'S'
                 })
             else:
-                return '사용자가 가지고 있는 사진이 없습니다', 404
+                return jsonify({
+                    'img_info': [],
+                    'user_no': user_no,
+                    'user_id': user_id,
+                    'tag_list': tag_list,  # 대분류,중분류,태그
+                    'type': 'S'
+                })
         else:
             user_no = g.user_no
             user_tags_images = image_service.get_image_list_by_tags(tag_list, user_no=user_no)
@@ -127,7 +134,12 @@ def create_endpoints(app, services):
                     'type': 'S'
                 })
             else:
-                return '사용자가 가지고 있는 사진중 해당 TAG 들을 가지고 있는 사진이 없습니다\n', 404
+                return jsonify({
+                    'img_info': [],
+                    'user_no': user_no,
+                    'tag_list': tag_list,
+                    'type': 'S'
+                })
 
     # 유입 , 이미지 넘버 클릭에 대해, home > S(검색),   public > S(검색),  public > R(추천)
 
@@ -221,6 +233,7 @@ def create_endpoints(app, services):
     @login_required
     def get_public_image_by_tags():
         tag_list = request.json['tags']   # tags,  tag_no 리스트
+        print(tag_list)
         if tag_list == list([]):
             user_no = g.user_no
             search_tag_list = tag_service.get_public_tag_list()  # 검색용태그 리스트
@@ -249,7 +262,11 @@ def create_endpoints(app, services):
                     'type': 'S'
                 })
             else:
-                return '', 404
+                return jsonify({
+                    'img_info': [],
+                    'tag_list': search_tag_list,
+                    'type': 'S'
+                })
 
 
     # like
@@ -269,7 +286,11 @@ def create_endpoints(app, services):
                     'tag_list' : search_tag_list
                 })
             else:
-                return '사용자가 가지고 있는 사진이 없습니다\n', 404
+                return jsonify({
+                    'img_info' : [],
+                    'user_no' : user_no,
+                    'tag_list' : search_tag_list
+                })
 
         else:
             user_no = g.user_no
@@ -282,7 +303,11 @@ def create_endpoints(app, services):
                     'tag_list' : search_tag_list
                 })
             else:
-                return '사용자가 가지고 있는 사진중 해당 TAG 들을 가지고 있는 사진이 없습니다\n', 404
+                return jsonify({
+                    'img_info': [],
+                    'user_no': user_no,
+                    'tag_list': search_tag_list
+                })
 
 
     @app.route('/test', methods=['GET'])
